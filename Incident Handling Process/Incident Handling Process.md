@@ -1,5 +1,4 @@
-![[Pasted image 20250805174302.png]]
-
+![Incident Handling](../attachments/Pasted%20image%2020250805174302.png)
 ## Incident Handling
 
 - Incident Handling is like a fill station we hope we never need it but when the fire starts,it can save the entire organization
@@ -30,7 +29,8 @@
 - cyber kill chain is a model created by Lockheed Martin to describe the stages of a cyberattack from start to finish
 - As a defender we should try to stop attackers as early in the chain as possible, because the further they progress. the more damage they can cause
 
-![[Pasted image 20250805182611.png]]
+![Incident Handling](../attachments/Pasted%20image%2020250805182611.png)
+
 - `Reconnaissance` 
 	- planning & info gathering
 	- attacker choose a target and collects information 
@@ -71,7 +71,8 @@ In which stage of the cyber kill chain is malware developed?
 
 - we got to know the attack lifecycle we can know anticipate an attacker's moves. but to respond effectively for that we need a structured process 
 
-![[Pasted image 20250805193808.png]]
+![Incident Handling](../attachments/Pasted%20image%2020250805193808.png)
+
 
 - `Preparation`
 	- building the defenses and processes before an incident
@@ -280,7 +281,8 @@ Handling an incident is like dealing with a **crime scene inside your company**.
 
 ### The Investigation Cycle
 
-![[Pasted image 20250805234359.png|400]]
+![Incident Handling|400](../attachments/Pasted%20image%2020250805234359.png)
+
 1. **create and use IOCs**
 	- IOCs (Indicators of Compromise)=  clues of compromise
 	- tools : openioc/yara, mandiant IOCs editor
