@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Incident Handling Process.md",
+                "file": "Incident Handling Process/Incident-Handling-Process.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Incident Handling Process"
+              "title": "Incident-Handling-Process"
             }
           }
         ]
@@ -167,9 +167,17 @@
       "obsidian-excalidraw-plugin:New drawing": false
     }
   },
-  "active": "ec8807d2e1ac8904",
+  "active": "63b8d64b59803b27",
   "lastOpenFiles": [
-    "Incident Handling Process.md",
+    "Incident Handling Process/Incident-Handling-Process.md",
+    "Untitled.md",
+    "attachments/Pasted image 20250805234359.png",
+    "attachments/Pasted image 20250805193808.png",
+    "attachments/Pasted image 20250805182611.png",
+    "attachments/Pasted image 20250805174302.png",
+    "attachments",
+    "Incident Handling Process",
+    "Pasted image 20250805173919.png",
     "Welcome.md"
   ]
 }
