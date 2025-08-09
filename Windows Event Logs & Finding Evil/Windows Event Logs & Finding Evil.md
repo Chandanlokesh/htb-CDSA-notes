@@ -1,4 +1,4 @@
-![windows event logo](attachments/Pasted%20image%2020250809101351.png)
+![windows event logo](../attachments/Pasted%20image%2020250809101351.png)
 
 - Windows Event Logs are like **a diary your computer keeps**, recording almost everything that happens — from program errors to someone logging in.
 
@@ -76,4 +76,6 @@ xfreerdp /u:Administrator /p:'HTB_@cad3my_lab_W1n10_r00t!@0' /v:[Target IP] /dyn
 `  `
 
 
-![](Pasted%20image%2020250809105520.png)
+![some image ](../attachments/Pasted%20image%2020250809105520.png)
+
+
