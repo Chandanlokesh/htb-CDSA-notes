@@ -40,3 +40,55 @@
 #### Shell
 - `Bourne-Again Shell` (`BASH`)
 - Besides Bash, there also exist other shells like [Tcsh/Csh](https://en.wikipedia.org/wiki/Tcsh), [Ksh](https://en.wikipedia.org/wiki/KornShell), [Zsh](https://en.wikipedia.org/wiki/Z_shell), [Fish](https://en.wikipedia.org/wiki/Friendly_interactive_shell) shell and others.
+
+#### Special Symbols in the Prompt
+
+- `~` → Your **home directory**.
+    
+- `$` → Normal (unprivileged) user prompt.
+    
+- `#` → Root (privileged) user prompt.
+
+#### PS1 Variable – Controlling the Prompt
+
+- `PS1` is an environment variable in Linux that defines how your prompt looks.
+- Acts like a **template** for the prompt.
+
+
+`PS1="\u@\h \w$ "`
+
+**Common Prompt Special Characters**
+
+|Special Code|Description|
+|---|---|
+|`\d`|Date (Mon Feb 6)|
+|`\D{%Y-%m-%d}`|Date (YYYY-MM-DD)|
+|`\H`|Full hostname|
+|`\j`|Number of jobs managed by the shell|
+|`\n`|Newline|
+|`\r`|Carriage return|
+|`\s`|Name of the shell|
+|`\t`|Time 24-hour (HH:MM:SS)|
+|`\T`|Time 12-hour (HH:MM:SS)|
+|`\@`|Current time with AM/PM|
+|`\u`|Current username|
+|`\w`|Full path of the current working directory|
+
+However, we can look at the [bash-prompt-generator](https://bash-prompt-generator.org/) and [powerline](https://github.com/powerline/powerline), which gives us the possibility to adapt our prompt to our needs.
+
+---
+#### Get Help?
+
+|Method|Command Syntax|Description|
+|---|---|---|
+|**man pages** 📖|`man <tool>`|Shows the full manual for the command with detailed usage.|
+|**--help** 📜|`<tool> --help`|Displays a short help guide with available options.|
+|**-h** 📝|`<tool> -h`|Similar to `--help`, but shorter (some commands use this).|
+|**apropos** 🔍|`apropos <keyword>`|Searches all manual page descriptions for a keyword.|
+
+[explainshell](https://explainshell.com/)
+
+in man page
+- Press `q` → Quit
+- Press `/keyword` → Search for keyword
+- Press `n` → Next search result
