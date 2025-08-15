@@ -6,11 +6,11 @@
 | Aug 5  | 1       | Incident Handling Process                             | ✅      |
 | Aug 6  | 2       | Security Monitoring & SIEM Fundamentals               | ✅      |
 | Aug 7  | 3       | Security Monitoring & SIEM Fundamentals               | ✅      |
-| Aug 8  | 4       | Security Monitoring & SIEM Fundamentals               |        |
-| Aug 9  | 5       | Windows Event Logs & Finding Evil                     |        |
-| Aug 10 | 6       | Windows Event Logs & Finding Evil                     |        |
+| Aug 8  | 4       | Security Monitoring & SIEM Fundamentals               | ✅      |
+| Aug 9  | 5       | Windows Event Logs & Finding Evil                     | ✅      |
+| Aug 10 | 6       | Windows Event Logs & Finding Evil                     | ✅      |
 | Aug 11 | 7       | Windows Event Logs & Finding Evil                     |        |
-| Aug 12 | 8       | Introduction to Threat Hunting & Hunting With Elastic |        |
+| Aug 12 | 8       | Introduction to Threat Hunting & Hunting With Elastic | ✅      |
 | Aug 13 | 9       | Introduction to Threat Hunting & Hunting With Elastic |        |
 | Aug 14 | 10      | Understanding Log Sources & Investigating with Splunk |        |
 | Aug 15 | 11      | Understanding Log Sources & Investigating with Splunk |        |

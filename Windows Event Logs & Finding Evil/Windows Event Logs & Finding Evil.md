@@ -364,3 +364,174 @@ Replicate the Credential Dumping attack described in this section and provide th
 ![](../attachments/Pasted%20image%2020250809221107.png)
 
 ![](../attachments/Pasted%20image%2020250809222245.png)
+
+----
+---
+
+
+
+
+### Event Tracing for Windows (ETW)
+
+---
+
+**What Is ETW?**
+**Definition**:  
+ETW (Event Tracing for Windows) is a high-speed, low-overhead tracing framework built into Windows OS that allows logging of detailed system and application events in real-time.
+- Developed by Microsoft
+- Works in both **user-mode** and **kernel-mode**
+- Uses a **publish-subscribe model**
+
+> **Think of ETW as a powerful microscope into the Windows OS internals** — capturing deep, real-time visibility of process, network, registry, and system behavior.
+
+---
+
+🔍 **Why ETW Matters in Security**
+- Traditional logging (like Event Viewer) only scratches the surface.
+- ETW gives **fine-grained**, **real-time**, and **low-noise** telemetry.
+- It captures:
+    - Process creation/termination
+    - File access
+    - Registry changes
+    - Thread injections
+    - DLL loads
+    - Network connections
+- Used by tools like **Sysmon**, **Windows Defender**, **WDAC**, **AMSI**, **ETW TI (Threat Intelligence)**.
+---
+**ETW Architecture & Components**
+
+
+
+
+  **Providers**
+- Generate events.
+- Examples: `Microsoft-Windows-Sysmon`, `Microsoft-Windows-Kernel-Process`, `Winlogon`, etc.
+- Types:
+    - **Manifest-based**
+    - **MOF-based**
+    - **WPP-based**   
+    - **TraceLogging**
+
+**Controllers**
+- Start/Stop ETW sessions.
+- Choose which providers and what level/keywords to log.
+- Example tool: `logman.exe`
+
+ **Consumers**
+- Apps or services that **receive ETW data**.
+- Examples: `eventvwr`, custom PowerShell scripts, SIEM agents, or custom tools.
+
+ **Channels**
+- Logical grouping of events (Admin, Operational, Debug, etc.)
+- Only providers with a Channel property can be read in Event Viewer.
+
+---
+
+💡 How Does It Work?
+- ETW operates via **Trace Sessions** (a kind of buffer).
+- Controllers configure sessions.
+- Providers write events to sessions.
+- Consumers pull data from sessions or `.etl` (Event Trace Log) files.
+---
+ ⚒️ Interacting with ETW using `logman`
+ 
+> `logman` = CLI tool to manage ETW sessions
+
+
+#### Common Use Cases:
+
+|Command|What it Does|
+|---|---|
+|`logman query -ets`|List all live ETW sessions|
+|`logman query "SessionName" -ets`|View providers & details of a specific session|
+|`logman query providers`|List all providers on system|
+|`logman query providers <Name>`|View levels/keywords supported by a specific provider|
+|`logman start myTrace -p <ProviderName>`|Start your own custom trace session|
+
+Key Flags:
+
+- `-ets` → required for querying **real-time/live** system-wide ETW sessions
+- `findstr` → used to filter huge lists (`| findstr "Sysmon"`)
+
+---
+
+#### 📦 Sysmon & ETW
+
+- **Sysmon** is an ETW provider (event source) and consumer (writes to Windows Event Logs).
+- Events like **Event ID 10 (Process Access)** are sourced from ETW and need to be **enabled in the Sysmon config**.
+- Using ETW directly lets you go **beyond what Sysmon collects**.
+
+---
+
+Notes & Tips
+- ETW logs are often saved as `.etl` files for offline analysis.
+- Use `Get-WinEvent` or custom tools to parse `.etl` logs.
+- High-volume providers are **disabled by default** to prevent performance impact
+- ETW is a **lightweight** and **real-time friendly** telemetry source.
+
+---
+#### GUI tool for ETW
+
+**Performance Monitor**
+- View active trace sessions.
+- See providers attached to those sessions.
+- Modify sessions by adding/removing providers.
+- Create your own sessions (under **User Defined**).
+
+
+**EtwExplorer**
+- A third-party GUI tool to browse ETW providers and metadata.
+- Helps in exploring what each provider supports (keywords, levels, GUIDs, etc.).
+
+
+- **Providers** are components (from Windows or third-party apps) that **generate ETW events**.
+- Each provider has:
+    - A unique **name or GUID**.
+    - Event **Levels** (Critical, Error, Warning, Info, Verbose).
+    - **Keywords** to filter specific event types.
+- Windows 10+ has over **1,000 built-in providers**.
+
+
+#### 🔎 Useful ETW Providers for Security & Detection
+
+|**Provider**|**Use Case**|
+|---|---|
+|`Microsoft-Windows-Kernel-Process`|Process injection, hollowing, suspicious execution|
+|`Microsoft-Windows-Kernel-File`|File access, modification, ransomware activity|
+|`Microsoft-Windows-Kernel-Network`|C2 activity, unauthorized connections, data exfil|
+|`Microsoft-Windows-SMBClient/Server`|Lateral movement, suspicious file shares|
+|`Microsoft-Windows-DotNETRuntime`|.NET exploitation, malicious .NET assemblies|
+|`OpenSSH`|Brute force, SSH logins, failed/success attempts|
+|`Microsoft-Windows-VPN-Client`|VPN activity (authorized/unauthorized access)|
+|`Microsoft-Windows-PowerShell`|Suspicious script execution, script block logging|
+|`Microsoft-Windows-Kernel-Registry`|Registry changes (often used for persistence)|
+|`Microsoft-Windows-CodeIntegrity`|Malicious drivers, unsigned code loading|
+|`Microsoft-Antimalware-Service`|Disabled AV, evasion of AV controls|
+|`WinRM`|Remote command execution, lateral movement|
+|`Microsoft-Windows-TerminalServices-LocalSessionManager`|Remote desktop connections|
+|`Microsoft-Windows-Security-Mitigations`|Bypass of security controls (e.g., DEP, ASLR)|
+|`Microsoft-Windows-DNS-Client`|DNS tunneling, weird DNS queries|
+|`Microsoft-Antimalware-Protection`|Protection status, evasion detection|
+
+#### 🔐 Restricted Providers (Privileged Access Required)
+
+Example: `Microsoft-Windows-Threat-Intelligence`
+- Only accessible by processes with **PPL (Protected Process Light)** rights.
+- Used by **EDRs and AV tools** to get deep telemetry (e.g., Defender ATP).
+- Cannot be accessed by normal tools or users (unless elevated via tricks or approved by Microsoft).
+**Why it's restricted**: To prevent abuse by malware (since it has deep access to threat data).
+To access it, a vendor must:
+- Register with Microsoft.
+- Implement **ELAM** driver (Early Launch Anti-Malware).
+- Pass strict validation and sign with Microsoft-issued certificates.
+
+```
+sysmon is great but doesnt capture everything like some low level kernel events
+
+logs are collected by .etl file
+```
+
+**References**
+- [Medium Article on ETW](https://nasbench.medium.com/a-primer-on-event-tracing-for-windows-etw-997725c082bf)
+- [Beginner’s ETW Guide – bmcder.com](https://bmcder.com/blog/a-begginers-all-inclusive-guide-to-etw)
+

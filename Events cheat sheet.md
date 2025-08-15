@@ -103,6 +103,7 @@
 | **20**   | **WMI Event Consumer Activity** | 🛠 _(consumer tool)_ |
 | **21**   | **WMI Event Binding Activity**  | 🔗 _(binding link)_  |
 
+15 Sysmon Event ID 15 tells you when **something is hiding extra data inside a file in a secret compartment** called an _alternate data stream_.
 
 💡 **Memory Trick:**  
 - **1–7** 🖥 = Process & Image stuff.
@@ -110,4 +111,6 @@
 - **11–14** 📂 = File & Registry changes.
 - **19–22** 🌐 = WMI & network queries.
 ---
+
+https://www.virustotal.com/gui/home/search
 
