@@ -11,7 +11,7 @@
 | Aug 10 | 6       | Windows Event Logs & Finding Evil                     | ✅      |
 | Aug 11 | 7       | Windows Event Logs & Finding Evil                     |        |
 | Aug 12 | 8       | Introduction to Threat Hunting & Hunting With Elastic | ✅      |
-| Aug 13 | 9       | Introduction to Threat Hunting & Hunting With Elastic |        |
+| Aug 13 | 9       | Introduction to Threat Hunting & Hunting With Elastic | ✅      |
 | Aug 14 | 10      | Understanding Log Sources & Investigating with Splunk |        |
 | Aug 15 | 11      | Understanding Log Sources & Investigating with Splunk |        |
 | Aug 16 | 12      | Understanding Log Sources & Investigating with Splunk |        |
