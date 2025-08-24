@@ -541,3 +541,200 @@ Get-ExecutionPolicy -List
 ---
 
 ## windows management instrumentation (WMI)
+
+- it like a remote control system built on every windows computer . it lets us to ask questions regarding the applications or we can tell them what to do
+- WMI is used only of managing and querying system info
+
+|Component|Analogy|What it does in real life|
+|---|---|---|
+|**WMI service**|The **house manager**|Runs in the background, listens to your requests, talks to appliances (providers).|
+|**Managed objects**|The **appliances** in your smart home|Things you can control: processes, files, OS, users, disks.|
+|**WMI providers**|The **smart plugs/sensors**|Each provider monitors one type of object (CPU provider, disk provider, etc.).|
+|**Classes**|The **blueprints**|Standard way of describing an object (e.g., `Win32_OperatingSystem` = OS info).|
+|**Methods**|The **buttons on the remote**|Actions you can take (start/stop process, rename file).|
+|**WMI repository**|The **instruction manual library**|Stores static data about system configuration.|
+|**CIM Object Manager (CIMOM)**|The **dispatcher**|Delivers your request to the right provider and gives back results.|
+|**WMI API**|The **remote control app on your phone**|Lets programs/scripts use WMI.|
+|**WMI consumer**|**You, the homeowner**|Sends queries like “Tell me system info” or “Do X action.”|
+
+**WMIC (Command Prompt tool)** → Like talking through walkie-talkie 📻
+
+`wmic os list brief`
+gives os info quickly
+
+**PowerShell cmdlets** → Like using a smartphone app 📱
+`Get-WmiObject -Class Win32_OperatingSystem | Select Version,BuildNumber`
+same get the os info
+
+**Invoke-WmiMethod** → Like pressing “action buttons” 🎛️
+`Invoke-WmiMethod -Path "CIM_DataFile.Name='C:\test.txt'" -Name Rename -ArgumentList "C:\renamed.txt"`
+Renames a file remotely or locally.
+
+**Running WMI in different pc**
+`Get-WmiObject -Class Win32_OperatingSystem -ComputerName "PC2"`
+
+**Use case**
+✅ See status of systems (OS, CPU, memory, users).  
+✅ Configure security settings remotely.  
+✅ Add/remove users.  
+✅ Start/stop processes.  
+✅ Schedule tasks.  
+✅ Collect logs.  
+✅ Blue team uses it for monitoring.  
+✅ Red team uses it for stealthy attacks (lateral movement, code execution).
+
+---
+---
+
+## Microsoft Management Console (MMC)
+
+MMC is an **empty toolbox** (the console). You fill it with **tools** (called _snap-ins_) to manage Windows things—services, logs, disks, users, certificates—**on your PC or on other PCs/servers**.
+- **MMC (the box)** = the frame/window.
+- **Snap-ins (the tools)** = Event Viewer, Services, Device Manager, etc.
+- **.msc file** = your **saved toolbox layout** so you can open the same tools next time with one double-click.
+
+we can only use win services and default application to run 
+
+we can search `mmc` and we can run it can also be run remotly
+
+![](attachments/Pasted%20image%2020250824232927.png)
+
+explore the tool
+
+---
+---
+## windows subsystem for linux (WSL)
+
+Microsoft built **WSL**, which lets you run **Linux commands and tools inside Windows, without a full virtual machine**.
+
+| Command                                                                                    | Description                                                |
+| :----------------------------------------------------------------------------------------- | :--------------------------------------------------------- |
+| `wsl --install`                                                                            | installing wsl we can enable it with poweshell (admin)<br> |
+| `Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Windows-Subsystem-Linux<br>` | enable wsl manually                                        |
+| `.tar`                                                                                     | install any linux system form microsoft store              |
+| `C:\` in Windows = `/mnt/c/` in Linux<br>example<br>`cd /mnt/c/Users/YourName/Desktop`<br> | Access Windows drives inside Linux under `/mnt/`           |
+| `notepad.exe myfile.txt`<br>                                                               | can even **run Windows commands inside WSL**               |
+
+```powershell
+# Install WSL with Ubuntu
+wsl --install -d Ubuntu
+
+# Launch Ubuntu
+wsl
+
+# Inside Ubuntu shell
+sudo apt update && sudo apt install nmap -y
+nmap -sV 192.168.1.1   # Scan a device on the network
+
+# Switch back to Windows path
+cd /mnt/c/Users/YourName/Desktop
+ls
+
+```
+
+---
+---
+## Desktop Experience vs. Server Core
+
+**Desktop Experience** → For admins who prefer GUI and when apps need it.
+**Server Core** → For production environments where performance, stability, and security are more important.
+
+#### Applications (Key Differences)
+
+| Application / Tool             | Server Core     | Desktop Experience |
+| ------------------------------ | --------------- | ------------------ |
+| Command Prompt                 | ✅ Available     | ✅ Available        |
+| PowerShell / .NET              | ✅ Available     | ✅ Available        |
+| Registry Editor (regedit)      | ✅ Available     | ✅ Available        |
+| Disk Management (diskmgmt.msc) | ❌ Not Available | ✅ Available        |
+| Server Manager                 | ❌ Not Available | ✅ Available        |
+| MMC console                    | ❌ Not Available | ✅ Available        |
+| Event Viewer (eventvwr)        | ❌ Not Available | ✅ Available        |
+| Services (services.msc)        | ❌ Not Available | ✅ Available        |
+| Control Panel                  | ❌ Not Available | ✅ Available        |
+| File Explorer (explorer.exe)   | ❌ Not Available | ✅ Available        |
+| Task Manager                   | ✅ Available     | ✅ Available        |
+| Internet Explorer/Edge         | ❌ Not Available | ✅ Available        |
+| Remote Desktop                 | ✅ Available     | ✅ Available        |
+
+---
+---
+
+## Windows security
+
+#### Windows Security Model – Core Principles
+- **Authentication**
+    - Verifies **who you are**.
+    - Uses username/password, Kerberos tickets, NTLM hashes, smart cards, biometrics, etc.
+- **Authorization**
+    - Determines **what you can do**.
+    - Uses Access Control Lists (ACLs) on files, services, registry, and objects.
+- **Auditing**
+    - Records **who did what and when**.
+    - Events stored in **Windows Event Logs** for security monitoring.
+- **Least Privilege Principle**
+    - Users/processes should only have the **minimum rights needed**.
+    - Prevents attackers from misusing accounts.
+- **Separation of Duties**
+    - Splits responsibilities between different accounts or roles (e.g., normal user account vs. admin account).
+- **Defense in Depth**
+    - Multiple layers of security (Firewall, Defender AV, BitLocker, User Rights, Logging).
+    - If one layer fails, others still provide protection.
+
+
+## Security Entities in Windows
+Security applies to different components, not just users
+- **Users** → need authentication & permissions.
+- **Groups** → collections of users (e.g., Administrators, Domain Users).
+- **Processes & Threads** → each has a security context (token).
+- **Computers in a Network** → treated as security principals with trust relationships.
+
+#### security identifier (SID)
+- Every **security principal** (user, group, or computer account) in Windows has a **unique SID**.
+- Even if two users have the **same username**, their SIDs are **different**, allowing Windows to distinguish them.
+- SIDs are stored in the **security database** and are added to a user's **access token**, defining what actions they can perform.
+
+A SID is a **string value** that looks like this:
+`S-1-5-21-674899381-4069889467-2080702030-1002`
+
+|Part|Number|Description|
+|---|---|---|
+|SID identifier|S|Marks the string as a SID|
+|Revision level|1|Current revision level (always 1)|
+|Identifier Authority|5|48-bit number identifying **the authority** that created the SID (e.g., local machine or domain)|
+|Subauthority1|21|Variable number showing **the relation or group** to the authority|
+|Subauthority2|674899381-4069889467-2080702030|Identifies **which computer or domain** created the account|
+|Relative ID (RID)|1002|Distinguishes **individual accounts** (normal user, admin, guest, etc.)|
+`whoami /user`
+we can see the username and SID
+
+---
+
+#### security account manager (SAM)
+- SAM is a windows database that stores
+- user accounts, group accounts, password hashes
+- SAM also **grants rights** for processes to execute on the system or network.
+
+#### Access control entries (ACE) and Access control list (ACL)
+- **ACLs** define **who can do what** on a securable object (file, folder, process).
+- Each ACL contains **Access Control Entries (ACEs)**:
+- An ACE specifies the permissions for a **specific user, group, or process**.
+- ACL = the full list of permissions
+- ACE = one rule in the list
+
+| ACL Type                     | Description                                                                |
+| ---------------------------- | -------------------------------------------------------------------------- |
+| **DACL** (Discretionary ACL) | Specifies which users/groups are **allowed or denied access** to an object |
+| **SACL** (System ACL)        | Specifies what **access attempts are logged** for auditing purposes        |
+#### Access Tokens
+- Every **process or thread** started by a user carries an **access token**.
+- Access tokens include:
+    - User SID
+    - Group SIDs
+    - Privileges
+    - Other security-relevant info
+- **Local Security Authority (LSA)** validates access tokens during authorization.
+
+---
+
+#### User Account Control (UAC)
