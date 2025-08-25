@@ -738,3 +738,463 @@ we can see the username and SID
 ---
 
 #### User Account Control (UAC)
+
+its like a bouncer in the club if we need to access the system level stuff then we need to go though this steps
+
+`i did not get this diagram`
+
+![](attachments/Pasted%20image%2020250825183851.png)
+
+- **User starts something that needs admin rights**  
+    Example: Running `Defrag (Admin)` or installing software.
+- **ShellExecute & CreateProcess**  
+    Windows tries to create the process, but sees it needs higher privileges.
+- **Elevation prompt (consent / credentials)**
+    - If you’re an admin → You get the **consent prompt** (“Do you want to allow this app…?”).
+    - If you’re a standard user → You get the **credential prompt** (must enter admin password).
+- **System checks conditions**
+    - Is **Secure Desktop** enabled? (UAC dims the screen so malware can’t click for you).
+    - Is the file **signed by Microsoft** and marked for **silent elevation** (e.g., trusted Windows tools)?
+    - What’s your **UAC slider level** (Always notify, Default, Never notify)?
+- **Decision**
+    - If conditions are okay → Process gets elevated via the **Application Information Service**.
+    - Otherwise → It’s denied or runs with normal user rights.
+- **Kernel layer**  
+    Finally, if elevation is granted, the process is created and interacts with the **file system & registry** (with admin rights).
+
+
+---
+#### Registry
+
+the windows registry is like a central database that stores al the setting for os, applications (if needed) users(personal preferences, desktop wallpapers... )
+
+- In Linux: To see startup programs → check `/etc/init.d/` or `.bashrc`.
+- In Windows: Same thing is stored in Registry → `HKLM\Software\Microsoft\Windows\CurrentVersion\Run`.
+
+##### Registry structure
+The Registry is **hierarchical**, like a **folder tree**.  
+At the top, we have **Root Keys** (like root folders), and inside them, we have **Subkeys** (like subfolders), and inside those, we have **Values** (like files).
+
+**Windows Registry - Root Keys**
+
+|Root Key|Emoji|Full Form / Meaning|What It Stores|Who It Affects|Example Use Case|
+|---|---|---|---|---|---|
+|**HKEY_CLASSES_ROOT (HKCR)**|📂|Classes Root|Information about **file types, extensions, and COM objects** (Component Object Model). Basically, tells Windows _how files and programs interact_.|System-wide (all users)|`.txt` opens with Notepad 📝, `.docx` opens with Word|
+|**HKEY_CURRENT_USER (HKCU)**|👤|Current User|Settings & preferences of the **currently logged-in user**: desktop, wallpaper, network drives, environment variables.|Only YOU (the logged-in user)|Your wallpaper 🌄, browser homepage 🌐, theme 🎨|
+|**HKEY_LOCAL_MACHINE (HKLM)**|🖥️|Local Machine|System-wide settings for **all users on this computer**. Includes drivers, services, startup programs, hardware configs.|Everyone on the PC|Disable USB storage 🚫💾, Installed programs list 📦|
+|**HKEY_USERS (HKU)**|👥|Users|Contains settings for **all user profiles** on the system. HKCU is just a shortcut to your profile inside here.|Each user separately|Stores each user’s NTUSER.DAT (personal hive) 🗝️|
+|**HKEY_CURRENT_CONFIG (HKCC)**|⚙️|Current Config|Stores temporary **hardware profile** info for the current session. Pulled from HKLM at startup.|Current session only|Monitor/display settings 🖥️, printer configs 🖨️|
+
+**Type of Values**
+
+- **Keys** = like folders 📁
+- **Subkeys** = subfolders 📂 inside those folders
+- **Values** = actual data 📝 inside each folder
+
+|🏷️ Value Type|📖 Meaning|🔍 Example Use Case|
+|---|---|---|
+|**REG_SZ** 📝|A plain string (Unicode/ANSI).|Stores paths like `"C:\Windows\System32\cmd.exe"`|
+|**REG_EXPAND_SZ** 🔗|A string with **environment variables** that expand.|`"C:\%SystemRoot%\System32"` → expands to real path|
+|**REG_MULTI_SZ** 📚|Multiple strings stored together, each separated by `\0`.|List of startup programs, multiple DNS servers|
+|**REG_DWORD** 🔢|A **32-bit number** (often ON/OFF switches).|`0 = Firewall Off`, `1 = Firewall On`|
+|**REG_QWORD** 🧮|A **64-bit number** (for very large values).|Performance counters, time stamps|
+|**REG_BINARY** ⚙️|Raw binary data (hex format).|Hardware configs, device drivers|
+|**REG_LINK** 🔗📂|Symbolic link to another registry key.|Rare, used internally by Windows|
+|**REG_NONE** ❓|No defined type, used rarely.|Reserved, uncommon|
+|**REG_DWORD_LITTLE_ENDIAN** ↔️|Same as REG_DWORD but stored in little-endian format (default for Windows).|Normal DWORD values internally|
+|**REG_DWORD_BIG_ENDIAN** 🔄|32-bit number in big-endian format (uncommon in Windows).|Rare, some cross-platform settings|
+|**REG_QWORD_LITTLE_ENDIAN** ↔️|Same as REG_QWORD but in little-endian format.|Standard QWORD usage in Windows|
+
+**Registry Storage (Where it lives)**
+
+The Windows Registry isn’t just one file — it’s broken into **hives** (big chunks of settings) stored on disk and loaded into memory when Windows starts.
+
+- Each **root key** (HKLM, HKCU, etc.) maps to a **hive file** on disk.
+- These hive files live mostly in:
+    - `C:\Windows\System32\Config\` → system-wide settings
+    - `C:\Users\<USERNAME>\` → user-specific settings (`Ntuser.dat`)
+- At boot time, Windows **loads these files into memory** so they can be accessed quickly.
+
+**Major Hive Files & Locations**
+
+|🏷️ Hive File|📍 Location|🔗 Maps To Registry Key|📝 What It Stores|
+|---|---|---|---|
+|**SYSTEM** ⚙️|`C:\Windows\System32\Config\SYSTEM`|`HKLM\SYSTEM`|Boot info, drivers, services|
+|**SOFTWARE** 💻|`C:\Windows\System32\Config\SOFTWARE`|`HKLM\SOFTWARE`|Installed programs & configs|
+|**SECURITY** 🔐|`C:\Windows\System32\Config\SECURITY`|`HKLM\SECURITY`|Security policies, LSA secrets|
+|**SAM** 🧑‍🤝‍🧑|`C:\Windows\System32\Config\SAM`|`HKLM\SAM`|Local user accounts & password hashes|
+|**DEFAULT** 📋|`C:\Windows\System32\Config\DEFAULT`|`HKU\.DEFAULT`|Default profile for new users|
+|**NTUSER.DAT** 👤|`C:\Users\<User>\NTUSER.DAT`|`HKCU`|Current user’s settings (desktop, wallpaper, etc.)|
+|**UsrClass.dat** 🎨|`C:\Users\<User>\AppData\Local\Microsoft\Windows\UsrClass.dat`|Part of `HKCU\Software\Classes`|User-specific class registrations (file associations, UI prefs)|
+
+**Registry is stored on disk**
+In Windows, the registry is not just in memory — it’s actually stored in physical files on disk. These are called **registry hives**. There are two main types:
+
+A. System-Level Registry Hives
+These apply to the **whole computer** — shared by all users.
+
+Location: `C:\Windows\System32\Config\`
+
+| 🧩 Hive File Name        | 🏷️ What It Contains                                 | 🔍 Related Root Key             |
+| ------------------------ | ---------------------------------------------------- | ------------------------------- |
+| `SAM`                    | Local user account info and passwords (hashed)       | `HKLM\SAM`                      |
+| `SECURITY`               | Local security policies and user rights              | `HKLM\SECURITY`                 |
+| `SYSTEM`                 | Boot config, drivers, and system settings            | `HKLM\SYSTEM`                   |
+| `SOFTWARE`               | Installed apps, Windows config, program settings     | `HKLM\SOFTWARE`                 |
+| `DEFAULT`                | Template for new users (like wallpaper, mouse speed) | `HKU\.DEFAULT`                  |
+| `BCD` (Boot Config Data) | Boot loader settings                                 | Not directly in Registry Editor |
+
+B. User-Level Registry Hives
+These are unique to each user profile.
+📍Location: `C:\Users\<USERNAME>\NTUSER.DAT`
+
+|📄 File|🏷️ Purpose|🔍 Related Root Key|
+|---|---|---|
+|`NTUSER.DAT`|User’s personal settings (desktop, browser, etc.)|`HKCU` (HKEY_CURRENT_USER)|
+|`ntuser.dat.LOG1/LOG2`|Backup/restore logs|Internal use|
+|`UsrClass.dat` (in `AppData`)|App-specific user settings|`HKCU\Software\Classes`|
+**How to Open and Navigate the Windows Registry (Using Regedit)**
+
+The Registry Editor (regedit.exe) is the built-in tool in Windows that allows you to view and edit the Windows Registry — the hierarchical database that stores system and user configuration.
+
+🔹 Press ⊞ Win + R → type `regedit` → hit Enter  
+🔹 Search for "regedit" in the Start Menu  
+🔹 From Command Prompt or PowerShell: just type `regedit`
+
+
+
+🧠 **Run & RunOnce Registry Keys**  
+(A common topic in Windows internals, malware persistence, and red teaming)
+
+📘 What Are They?
+
+Run and RunOnce are special registry keys used to automatically execute programs during:
+
+- System boot (machine-wide)
+    
+- User login (user-specific)
+    
+- One-time execution at next login/startup
+    
+
+These are commonly used by:
+
+- Legitimate software for auto-starting
+    
+- Attackers for persistence
+    
+
+
+
+🧩 Registry Key Paths
+
+There are four important keys to remember:
+
+|🗂 Registry Path|🧍 Scope|🔁 Behavior|
+|---|---|---|
+|HKEY_LOCAL_MACHINE\Software\Microsoft\Windows\CurrentVersion\Run|All users (system-wide)|Executes every time the system starts|
+|HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Run|Current logged-in user only|Executes every time that specific user logs in|
+|HKEY_LOCAL_MACHINE\Software\Microsoft\Windows\CurrentVersion\RunOnce|All users|Runs only once on next system boot, then deletes the entry|
+|HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\RunOnce|Current user|Runs only once at next login for the user, then deletes the entry|
+
+📌 Tip: RunOnce is useful for setup tasks or one-time installers.
+
+
+
+📂 Example Output
+
+🖥️ HKEY_LOCAL_MACHINE...\Run (System-wide apps)
+
+PowerShell command:  
+reg query "HKLM\Software\Microsoft\Windows\CurrentVersion\Run"
+
+Example result:
+
+```
+SecurityHealth    REG_EXPAND_SZ    %windir%\system32\SecurityHealthSystray.exe  
+RTHDVCPL          REG_SZ           "C:\Program Files\Realtek\Audio\HDA\RtkNGUI64.exe" -s  
+Greenshot         REG_SZ           C:\Program Files\Greenshot\Greenshot.exe  
+```
+
+🧑 HKEY_CURRENT_USER...\Run (Per-user apps)
+
+PowerShell command:  
+reg query "HKCU\Software\Microsoft\Windows\CurrentVersion\Run"
+
+Example result:
+
+```
+OneDrive         REG_SZ    "C:\Users\bob\AppData\Local\Microsoft\OneDrive\OneDrive.exe" /background  
+OPENVPN-GUI      REG_SZ    C:\Program Files\OpenVPN\bin\openvpn-gui.exe  
+Docker Desktop   REG_SZ    C:\Program Files\Docker\Docker\Docker Desktop.exe  
+```
+
+
+
+🛡️ Why It Matters (Security Focus)
+
+- These keys are heavily abused by malware and persistence techniques.
+    
+- Attackers drop backdoors here to restart malicious processes on reboot or login.
+    
+- Tools like Autoruns (Sysinternals) check these keys during system auditing.
+    
+- Blue teams and incident responders often inspect these keys during forensic analysis.
+    
+
+
+🧪 Quick Recap
+
+|🔑 Key Path|🔁 Repeats|👥 Applies To|🛠️ Common Use|
+|---|---|---|---|
+|Run|Every login/boot|System or current user|Persistent apps (good or bad)|
+|RunOnce|One-time only|System or current user|Setup scripts, malware tricks|
+
+---
+ 
+ #### Application whitelisting 
+ Application whitelisting is a security method that allows only approved (trusted) applications to run on a system. All other apps are blocked—even if they're not known to be malicious.
+⚠️ Challenge: It’s hard to implement at scale (many apps = more rules).  
+🧪 Solution: Start in Audit Mode first → test policies before enforcement.
+
+Whitelisting is recommended by organizations such as [NIST](https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-167.pdf), especially in high-security environments.
+
+---
+
+🧰 AppLocker — Microsoft’s Whitelisting Tool
+
+Introduced in: Windows 7 (and available in newer versions like Windows 10/11 & Windows Server)
+
+💼 Purpose: Allows system administrators to define which apps, scripts, or installers can be run by users or groups.
+
+🎯 What AppLocker Can Control:
+
+- 🧱 Executable files (.exe, .com)
+    
+- 📜 Script files (.ps1, .vbs, .bat, .cmd, .js)
+    
+- 🛠️ Windows Installer files (.msi, .msp)
+    
+- 📦 Packaged apps and installers (.appx, .msix)
+
+How Rules Are Created:
+
+AppLocker rules can be defined using:
+
+|Rule Type|Description|
+|---|---|
+|Publisher|Based on digital signature (e.g., Microsoft, Adobe)|
+|Path|Based on file/folder location (e.g., C:\Program Files\Zoom\zoom.exe)|
+|Hash|Based on the file’s cryptographic hash (unique fingerprint)|
+Rules can be scoped to:
+
+- 👥 Security groups (e.g., Admins, Users)
+    
+- 👤 Individual user accounts
+
+🧪 Audit Mode vs. Enforcement Mode
+
+|Mode|Purpose|
+|---|---|
+|Audit Mode|Log violations without blocking — test rules safely|
+|Enforce Mode|Actually block non-approved applications|
+Always use Audit Mode first before full deployment.
+[AppLocker](https://docs.microsoft.com/en-us/windows/security/threat-protection/windows-defender-application-control/applocker/applocker-overview)
+
+---
+
+
+🛠️ Local Group Policy 
+
+📌 What Is Local Group Policy?
+
+Local Group Policy is a feature in Windows that lets administrators (or users with admin rights) control settings and behavior of the local system — without needing a domain or server.
+
+✅ You can control:
+
+- Security settings
+    
+- App restrictions
+    
+- Password policies
+    
+- Network and user configuration
+    
+- Application whitelisting (e.g., AppLocker)
+    
+- Advanced Windows features like Credential Guard
+    
+
+—
+
+🏢 Difference Between Group Policy and Local Group Policy
+
+|Feature|Group Policy (Domain)|Local Group Policy (Standalone)|
+|---|---|---|
+|Requires a Domain Controller|✅ Yes|❌ No|
+|Applies to multiple computers|✅ Yes|❌ Applies to just one computer|
+|Common in enterprise networks|✅ Yes|❌ Used in personal/small business PCs|
+|Access via GPMC (Group Policy Mgmt Console)|✅ Yes|❌ Uses gpedit.msc|
+
+—
+
+🧭 How to Access Local Group Policy Editor:
+
+- Press ⊞ Win + R → type: gpedit.msc → Press Enter
+    
+
+🗂️ Structure of the Editor:
+
+- 🔧 Computer Configuration: Settings that apply to the entire system (all users)
+    
+- 👤 User Configuration: Settings that apply to a specific user account
+    
+
+—
+
+🔐 Example Use Cases
+
+Here are some real-world uses of Local Group Policy:
+
+|Feature|Where It's Found|What It Does|
+|---|---|---|
+|🔒 Credential Guard|Computer Configuration → Admin Templates → System → Device Guard|Isolates LSA (Local Security Authority) to protect credentials|
+|🚫 App Restrictions (AppLocker)|Computer Configuration → Windows Settings → Security Settings → AppLocker|Limits which apps can run on the system|
+|👁️ Audit Policy|Computer Configuration → Security Settings → Advanced Audit Policy|Enables detailed logging of user and system actions|
+|🔑 Password Policy|Computer Configuration → Security Settings → Account Policies → Password Policy|Enforces strong password rules (length, complexity, etc.)|
+|📦 Prevent App Installations|User Configuration → Admin Templates → Windows Components|Blocks users from installing unauthorized software|
+
+—
+
+🛡️ Why It's Important for Security:
+
+- Lock down user access
+    
+- Prevent misuse or unwanted configuration changes
+    
+- Enforce compliance with organization policies
+    
+- Stop malware from executing unauthorized tasks
+    
+- Control app behavior even without third-party tools
+    
+
+—
+
+✅ Summary
+
+- Local Group Policy allows fine-grained control over system behavior without needing a domain.
+    
+- It’s powerful for security hardening (e.g., Credential Guard, AppLocker, auditing).
+    
+- It’s accessed using gpedit.msc and separated into Computer/User configurations.
+    
+- Explore it hands-on — it’s essential knowledge for Windows administrators and security pros.
+    
+
+---
+
+🛡️ Windows Defender Antivirus — Notes
+
+📌 Overview  
+Windows Defender Antivirus (now called Microsoft Defender Antivirus) is the built-in security solution included with Windows operating systems.
+
+- Originally released: As anti-spyware for Windows XP/Server 2003.
+    
+- Bundled with: Windows Vista/Server 2008 and newer.
+    
+- Renamed: To Windows Defender Antivirus with Windows 10 Creators Update.
+    
+- Managed through: Windows Security Center.
+    
+
+🎯 Core Features
+
+|Feature|Description|
+|---|---|
+|✅ Real-Time Protection|Scans for threats actively while using the system.|
+|☁️ Cloud-Delivered Protection|Uploads suspicious files to Microsoft cloud for faster threat detection.|
+|🔐 Tamper Protection|Prevents changes to Defender settings via Registry, PowerShell, or GPO.|
+|🗂️ Controlled Folder Access|Ransomware protection — blocks unauthorized changes to protected folders.|
+|🧪 Exclusions|Allows whitelisting of files/folders (e.g., pentesting tools) to avoid false positives.|
+
+—
+
+⚙️ Managing Defender via PowerShell
+
+Use the following command to check Defender’s protection status:
+
+```powershell
+Get-MpComputerStatus | findstr "True"
+```
+
+🔍 Example Output:
+
+- AMServiceEnabled : True
+    
+- AntivirusEnabled : True
+    
+- RealTimeProtectionEnabled : True
+    
+- BehaviorMonitorEnabled : True
+    
+- IsTamperProtected : True
+    
+
+This confirms Defender and its components are active.
+
+—
+
+📂 Key Feature: Controlled Folder Access
+
+- Blocks unauthorized apps (like ransomware) from accessing important folders.
+    
+- You can manually add:
+    
+    - Protected folders
+        
+    - Allowed applications (trusted programs)
+        
+
+🔧 Useful if you’re using tools that might otherwise be flagged as malicious (e.g., Kali Linux tools or Mimikatz).
+
+—
+
+🛡️ Strengths
+
+✅ Built-in and free — no bloatware or added tracking.  
+✅ High detection rates — competitive with paid AV products in industry tests.  
+✅ Automatic updates — definitions update with Windows Update.  
+✅ Deep integration — no need for extra software hooks that slow the system.
+
+—
+
+⚠️ Limitations
+
+🚫 Not foolproof — can still be bypassed with advanced payloads (e.g., encoded or obfuscated attacks).  
+📉 May detect common tools like Metasploit/Mimikatz as malicious.  
+🧠 Should be used as part of a defense-in-depth strategy — not your only line of defense.
+
+—
+
+🧠 Key Takeaways
+
+- Microsoft Defender Antivirus is a strong baseline defense tool, especially with features like real-time protection, cloud analysis, and tamper protection.
+    
+- It can be configured and customized through both GUI and PowerShell.
+    
+- You should use it alongside secure configuration, patching, and system hardening for full protection.
+
+---
+
+wmic useraccount where "name='bob.smith'" get name,sid 
+
+What 3rd party security application is disabled at startup for the current user? (The answer is case sensitive).
+NordVpn 
+
+opened in taskmanager
+
+
+wmic useraccount where "name='Jim'" get name,sid 
+
+https://cloverophile.medium.com/hackthebox-academy-windows-fundamentals-skills-assessment-write-up-65b0e9979f7c
