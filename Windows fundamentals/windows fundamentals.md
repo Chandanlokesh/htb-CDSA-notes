@@ -1,4 +1,4 @@
-![](attachments/Pasted%20image%2020250822152251.png)
+![](../attachments/Pasted%20image%2020250822152251.png)
 
 ## introduction to windows
 
@@ -197,7 +197,7 @@ sudo mount -t cifs -o username=htb-student,password=Academy_WinFun! //IP/Company
 - **Computer Management → Shared Folders** → lets you see and manage all shares.
 - Good for monitoring what is being shared and who can access it.
 
-![](attachments/Pasted%20image%2020250821222742.png)
+![](../attachments/Pasted%20image%2020250821222742.png)
 
 - **Shares** → shows which folders/drives are shared over the network (e.g., `C$`, `Company Data`).
 - **Sessions** → shows which users are currently connected remotely to those shares (who is logged in over SMB).
@@ -215,7 +215,7 @@ sudo mount -t cifs -o username=htb-student,password=Academy_WinFun! //IP/Company
     - Interact with SMB/CIFS shares smoothly.
 👉 Without `cifs-utils`, the `mount -t cifs` command (used to mount Windows shares in Linux) won’t work.
 
-![](attachments/Pasted%20image%2020250821223309.png)
+![](../attachments/Pasted%20image%2020250821223309.png)
 
 ---
 ---
@@ -227,7 +227,7 @@ sudo mount -t cifs -o username=htb-student,password=Academy_WinFun! //IP/Company
 - MMC is microsoft management console its like a framework/container that gives system admin a central place to manage 
 - `Win+R`  and type `mmc`
 
-![](attachments/Pasted%20image%2020250822101441.png)
+![](../attachments/Pasted%20image%2020250822101441.png)
 
 - in command line we can use 
 - `powershell-sessionGet-Service | ? {$_.Status -eq "Running"}`
@@ -302,27 +302,29 @@ C:\htb> \\live.sysinternals.com\tools\procdump.exe -accepteula
 
 #### task manager tabs
 
-|**Tab**|**Description**|**Use Case / Why Important**|
-|---|---|---|
-|**Processes**|Shows apps & background processes with CPU, Memory, Disk, Network, and Power usage.|Identify high-resource processes, kill suspicious tasks.|
-|**Performance**|Real-time graphs of CPU, RAM, Disk, Network, GPU usage. Also shows system uptime.|Quick system health check. Can launch **Resource Monitor** for deeper analysis.|
-|**App history**|Tracks resource usage per app for the current user over time.|Identify which apps consumed most CPU/Network in the past.|
-|**Startup**|Lists apps that run at boot + their startup impact.|Control boot performance, check for persistence malware.|
-|**Users**|Shows logged-in users and their processes + resource usage.|Detect suspicious user sessions, multi-user activity.|
-|**Details**|Advanced view: process name, PID, status, username, CPU, memory usage.|Useful for malware hunting, process analysis (like in Sysinternals).|
-|**Services**|Displays installed services, their PID, description, and status. Can open **Services.msc**.|Check if critical services are running, investigate unknown services.|
-![](attachments/Pasted%20image%2020250822110158.png)
+| **Tab**         | **Description**                                                                             | **Use Case / Why Important**                                                    |
+| --------------- | ------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| **Processes**   | Shows apps & background processes with CPU, Memory, Disk, Network, and Power usage.         | Identify high-resource processes, kill suspicious tasks.                        |
+| **Performance** | Real-time graphs of CPU, RAM, Disk, Network, GPU usage. Also shows system uptime.           | Quick system health check. Can launch **Resource Monitor** for deeper analysis. |
+| **App history** | Tracks resource usage per app for the current user over time.                               | Identify which apps consumed most CPU/Network in the past.                      |
+| **Startup**     | Lists apps that run at boot + their startup impact.                                         | Control boot performance, check for persistence malware.                        |
+| **Users**       | Shows logged-in users and their processes + resource usage.                                 | Detect suspicious user sessions, multi-user activity.                           |
+| **Details**     | Advanced view: process name, PID, status, username, CPU, memory usage.                      | Useful for malware hunting, process analysis (like in Sysinternals).            |
+| **Services**    | Displays installed services, their PID, description, and status. Can open **Services.msc**. | Check if critical services are running, investigate unknown services.           |
+
+![](../attachments/Pasted%20image%2020250822110158.png)
 
 
 #### Resource monitor
 
-|**Tab**|**Description**|**Why Useful**|
-|---|---|---|
-|**CPU**|Per-process CPU usage, threads, handles.|Spot malware using spikes in CPU.|
-|**Memory**|Memory usage per process, page faults, committed memory.|Detect memory-heavy suspicious processes.|
-|**Disk**|Active disk I/O per process.|Identify ransomware writing heavily to disk.|
-|**Network**|Active network connections per process.|Spot suspicious outbound traffic (C2 servers, exfiltration).|
-![](attachments/Pasted%20image%2020250822110353.png)
+| **Tab**     | **Description**                                          | **Why Useful**                                               |
+| ----------- | -------------------------------------------------------- | ------------------------------------------------------------ |
+| **CPU**     | Per-process CPU usage, threads, handles.                 | Spot malware using spikes in CPU.                            |
+| **Memory**  | Memory usage per process, page faults, committed memory. | Detect memory-heavy suspicious processes.                    |
+| **Disk**    | Active disk I/O per process.                             | Identify ransomware writing heavily to disk.                 |
+| **Network** | Active network connections per process.                  | Spot suspicious outbound traffic (C2 servers, exfiltration). |
+
+![](../attachments/Pasted%20image%2020250822110353.png)
 
 ### Process Explorer
 
@@ -344,7 +346,7 @@ we can analyze parent child process relationship
 GUI tool for viewing & managing **Windows Services**.
 `win + R` -> `services.msc`
 
-![](attachments/Pasted%20image%2020250822115807.png)
+![](../attachments/Pasted%20image%2020250822115807.png)
 
 |**Property**|**Description**|**Security Implication**|
 |---|---|---|
@@ -597,7 +599,7 @@ we can only use win services and default application to run
 
 we can search `mmc` and we can run it can also be run remotly
 
-![](attachments/Pasted%20image%2020250824232927.png)
+![](../attachments/Pasted%20image%2020250824232927.png)
 
 explore the tool
 
@@ -743,7 +745,7 @@ its like a bouncer in the club if we need to access the system level stuff then 
 
 `i did not get this diagram`
 
-![](attachments/Pasted%20image%2020250825183851.png)
+![](../attachments/Pasted%20image%2020250825183851.png)
 
 - **User starts something that needs admin rights**  
     Example: Running `Defrag (Admin)` or installing software.
