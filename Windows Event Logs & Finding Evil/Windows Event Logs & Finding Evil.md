@@ -13,7 +13,7 @@ we can use **Event Viewer** or we can use **API** and **saved log files(.evtx)**
 
 #### Anatomy of an event log
 
-| Field             | What it Means                                                  |
+| `Field`           | `What it Means`                                                |
 | ----------------- | -------------------------------------------------------------- |
 | **Log Name**      | Which diary section this is from.                              |
 | **Source**        | Who wrote it (software/app/service).                           |
@@ -39,33 +39,33 @@ we can use **Event Viewer** or we can use **API** and **saved log files(.evtx)**
 
 #### 🔐 **Windows Security Logs**
 
-| Event ID        | Emoji  | Name                            | Why it Matters                                            |
-| --------------- | ------ | ------------------------------- | --------------------------------------------------------- |
-| **1102**        | 🧹     | Audit Log Cleared               | Often used to hide tracks after intrusion.                |
-| **1116**        | 🦠     | AV Malware Detection            | Defender spotted malware — monitor for spikes.            |
-| **1118**        | 🛠️    | AV Remediation Started          | Defender started removing/quarantining malware.           |
-| **1119**        | ✅      | AV Remediation Succeeded        | Malware cleanup was successful.                           |
-| **1120**        | ❌      | AV Remediation Failed           | Malware removal failed — urgent action needed.            |
-| **4624**        | 🔑     | Successful Logon                | Track normal vs. unusual logon patterns.                  |
-| **4625**        | 🚫     | Failed Logon                    | Multiple failures may mean brute-force attack.            |
-| **4648**        | 👤➡️💻 | Logon with Explicit Credentials | May indicate lateral movement attempts.                   |
-| **4656**        | 📂     | Handle to Object Requested      | Watch for sensitive resource access attempts.             |
-| **4688**        |        |                                 |                                                           |
-| **4672**        | 👑     | Special Privileges Logon        | Admin-level access given — monitor for abuse.             |
-| **4698**        | ⏰      | Scheduled Task Created          | Attackers use for persistence — suspicious if unexpected. |
-| **4700 / 4701** | 🔄⏰    | Task Enabled / Disabled         | Changing scheduled tasks could hide malicious jobs.       |
-| **4702**        | ✏️⏰    | Scheduled Task Updated          | Updates to tasks could mean altered malicious jobs.       |
-| **4719**        | 📝     | Audit Policy Changed            | Could be disabling logging to hide actions.               |
-| **4738**        | 👤✏️   | User Account Changed            | Unexpected changes may mean account takeover.             |
-| **4771**        | 🛡️    | Kerberos Pre-auth Failed        | Possible brute-force attempt on Kerberos.                 |
-| **4776**        | 🗝️    | Credential Validation Attempt   | Multiple failures may mean credential stuffing.           |
-| **4907**        |        |                                 |                                                           |
-| **5001**        | ⚙️🦠   | AV Real-Time Protection Changed | Could indicate disabling security features.               |
-| **5140**        | 📂🌐   | Network Share Accessed          | Watch for sensitive file access over network.             |
-| **5142**        | ➕🌐    | Network Share Created           | Could be for data theft or malware spread.                |
-| **5145**        | 🔍🌐   | Network Share Access Check      | Mapping network shares — possible recon step.             |
-| **5157**        | 🚫🌐   | Connection Blocked (WFP)        | WFP blocked suspicious network traffic.                   |
-| **7045**        | 🛠️📦  | Service Installed               | Unknown services might be malware.                        |
+| Event ID        | Emoji  | Name                            | Why it Matters                                                                  |
+| --------------- | ------ | ------------------------------- | ------------------------------------------------------------------------------- |
+| **1102**        | 🧹     | Audit Log Cleared               | Often used to hide tracks after intrusion.                                      |
+| **1116**        | 🦠     | AV Malware Detection            | Defender spotted malware — monitor for spikes.                                  |
+| **1118**        | 🛠️    | AV Remediation Started          | Defender started removing/quarantining malware.                                 |
+| **1119**        | ✅      | AV Remediation Succeeded        | Malware cleanup was successful.                                                 |
+| **1120**        | ❌      | AV Remediation Failed           | Malware removal failed — urgent action needed.                                  |
+| **4624**        | 🔑     | Successful Logon                | Track normal vs. unusual logon patterns.                                        |
+| **4625**        | 🚫     | Failed Logon                    | Multiple failures may mean brute-force attack.                                  |
+| **4648**        | 👤➡️💻 | Logon with Explicit Credentials | May indicate lateral movement attempts.                                         |
+| **4656**        | 📂     | Handle to Object Requested      | Watch for sensitive resource access attempts.                                   |
+| **4688**        | ⚙️     | Process Creation                | Logs every new process — critical for detecting malicious tools/scripts usage.  |
+| **4672**        | 👑     | Special Privileges Logon        | Admin-level access given — monitor for abuse.                                   |
+| **4698**        | ⏰      | Scheduled Task Created          | Attackers use for persistence — suspicious if unexpected.                       |
+| **4700 / 4701** | 🔄⏰    | Task Enabled / Disabled         | Changing scheduled tasks could hide malicious jobs.                             |
+| **4702**        | ✏️⏰    | Scheduled Task Updated          | Updates to tasks could mean altered malicious jobs.                             |
+| **4719**        | 📝     | Audit Policy Changed            | Could be disabling logging to hide actions.                                     |
+| **4738**        | 👤✏️   | User Account Changed            | Unexpected changes may mean account takeover.                                   |
+| **4771**        | 🛡️    | Kerberos Pre-auth Failed        | Possible brute-force attempt on Kerberos.                                       |
+| **4776**        | 🗝️    | Credential Validation Attempt   | Multiple failures may mean credential stuffing.                                 |
+| **4907**        | 📝     | Audit Policy Change (Object)    | Shows modifications to object-level auditing, often a sign of evasion attempts. |
+| **5001**        | ⚙️🦠   | AV Real-Time Protection Changed | Could indicate disabling security features.                                     |
+| **5140**        | 📂🌐   | Network Share Accessed          | Watch for sensitive file access over network.                                   |
+| **5142**        | ➕🌐    | Network Share Created           | Could be for data theft or malware spread.                                      |
+| **5145**        | 🔍🌐   | Network Share Access Check      | Mapping network shares — possible recon step.                                   |
+| **5157**        | 🚫🌐   | Connection Blocked (WFP)        | WFP blocked suspicious network traffic.                                         |
+| **7045**        | 🛠️📦  | Service Installed               | Unknown services might be malware.                                              |
 
 ```shell-session
 xfreerdp /u:Administrator /p:'HTB_@cad3my_lab_W1n10_r00t!@0' /v:ip
@@ -400,7 +400,7 @@ ETW (Event Tracing for Windows) is a high-speed, low-overhead tracing framework 
 ---
 **ETW Architecture & Components**
 
-
+![](../attachments/Pasted%20image%2020250901235750.png)
 
 
   **Providers**
@@ -534,4 +534,52 @@ logs are collected by .etl file
 **References**
 - [Medium Article on ETW](https://nasbench.medium.com/a-primer-on-event-tracing-for-windows-etw-997725c082bf)
 - [Beginner’s ETW Guide – bmcder.com](https://bmcder.com/blog/a-begginers-all-inclusive-guide-to-etw)
+
+---
+---
+
+## Tapping into ETW
+
+### Detection Example 1: Detecting Strange Parent-Child Relationships
+
+its when a process is calling child process 
+ex: calc.exe is spawning "cmd.exe"
+
+![](../attachments/Pasted%20image%2020250902000352.png)
+
+**Parent PID Spoofing** can be executed through the [psgetsystem project](https://github.com/decoder-it/psgetsystem) in the following manner.
+
+```powershell
+PS C:\Tools\psgetsystem> powershell -ep bypass
+
+PS C:\Tools\psgetsystem> Import-Module .\psgetsys.ps1 
+
+PS C:\Tools\psgetsystem> [MyProcess]::CreateProcessFromParent([Process ID of spoolsv.exe],"C:\Windows\System32\cmd.exe","")
+
+```
+
+![[Pasted image 20250902002403.png]]
+
+![[Pasted image 20250902002729.png]]
+
+
+
+Due to the parent PID spoofing technique we employed, Sysmon Event 1 incorrectly displays `spoolsv.exe` as the parent of `cmd.exe`. However, it was actually `powershell.exe` that created `cmd.exe`.
+
+
+ Let's begin by collecting data from the `Microsoft-Windows-Kernel-Process` provider using [SilkETW](https://github.com/mandiant/SilkETW) (the provider can be identified using `logman` as we described previously, `logman.exe query providers | findstr "Process"`). After that, we can proceed to simulate the attack again to assess whether ETW can provide us with more accurate information regarding the execution of `cmd.exe`.
+
+```powershell
+c:\Tools\SilkETW_SilkService_v8\v8\SilkETW>SilkETW.exe -t user -pn Microsoft-Windows-Kernel-Process -ot file -p C:\windows\temp\etw.json
+
+```
+
+
+
+
+The `etw.json` file (that includes data from the `Microsoft-Windows-Kernel-Process` provider) seems to contain information about `powershell.exe` being the one who created `cmd.exe`.
+
+It should be noted that SilkETW event logs can be ingested and viewed by Windows Event Viewer through `SilkService` to provide us with deeper and more extensive visibility into the actions performed on a system.
+
+### Detection Example 2: Detecting Malicious .NET Assembly Loading
 

@@ -1,5 +1,5 @@
 
-xfreerdp /u:htb-student /p:Academy_WinFun! /v:10.129.77.45 /dynamic-resolution
+xfreerdp /u:htb-student /p:Academy_WinFun! /v:10.129.205.123 /dynamic-resolution
 
 
 
@@ -9,3 +9,5 @@ ssh htb-student@<IP-Address>
 
 
 ---------------------------------------------------------------------
+
+HTB_@cad3my_lab_W1n10_r00t!@0
