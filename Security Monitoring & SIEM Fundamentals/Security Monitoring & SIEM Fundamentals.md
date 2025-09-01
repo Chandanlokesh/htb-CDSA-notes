@@ -357,7 +357,7 @@ Create a dashboard and table visualization in Kibana to show **failed logon atte
 - Click **Save and return** → Visualization appears in dashboard.
 - Save dashboard
 
- **Refinements (SOC Manager Requests)*
+ **Refinements (SOC Manager Requests)**
 **Changes Required**
 - Clearer column names.
 - Add **Logon Type**.

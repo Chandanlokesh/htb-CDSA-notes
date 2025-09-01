@@ -1,4 +1,13 @@
 
+### **Logon-TYPE**
+
+- **DC1/DC2** domain controllers . only admins can do 
+- **PKI** 
+- **WS001** normal workstartions
+- **PAW** privileged admin workstation 
+
+[event codes encyclopedia](https://www.ultimatewindowssecurity.com/securitylog/encyclopedia/event.aspx?eventid=4625)
+
 #### Anatomy of an event log
 
 | Field             | What it Means                                                  |
@@ -60,50 +69,35 @@
 
 #### 🖥 **Sysmon Event ID Cheat Sheet**
 
-##### **Process & Executables**
 
-|Event ID|Description|Emoji Memory Cue|
-|---|---|---|
-|**1**|**Process Creation** (who/what started)|🚀 _(something launches)_|
-|**2**|**File Creation Time Changed**|⏳ _(time altered)_|
-|**5**|**Process Terminated**|🛑 _(stop sign)_|
-|**6**|**Driver Loaded**|🚚 _(driver delivery)_|
-|**7**|**Image Loaded** (DLLs/modules)|🖼 _(picture loading)_|
-
-##### **Network & Connections**
-
-|Event ID|Description|Emoji Memory Cue|
-|---|---|---|
-|**3**|**Network Connection Detected**|🌐 _(internet globe)_|
-|**22**|**DNS Query**|❓🌐 _(ask the internet)_|
-
-#####  **File & Registry Activity**
-
-| Event ID | Description                         | Emoji Memory Cue      |
-| -------- | ----------------------------------- | --------------------- |
-| **11**   | **File Created**                    | 📄 _(new file)_       |
-| **12**   | **Registry Object Created/Deleted** | 🗂 _(folder changes)_ |
-| **13**   | **Registry Value Set**              | 📝 _(edit note)_      |
-| **14**   | **Registry Object Renamed**         | 🔄 _(rename arrow)_   |
-
-
-#####  **Security / Access Changes**
-
-| Event ID | Description                               | Emoji Memory Cue       |
-| -------- | ----------------------------------------- | ---------------------- |
-| **8**    | **Create Remote Thread** (code injection) | 🎯 _(targeted attack)_ |
-| **9**    | **Raw Access to Disk**                    | 💽 _(hard disk)_       |
-| **10**   | **Process Access** (OpenProcess)          | 🕵️ _(snooping)_       |
-
-#####  **WMI & Other Special Events**
-
-| Event ID | Description                     | Emoji Memory Cue     |
-| -------- | ------------------------------- | -------------------- |
-| **19**   | **WMI Event Filter Activity**   | 🧪 _(filter test)_   |
-| **20**   | **WMI Event Consumer Activity** | 🛠 _(consumer tool)_ |
-| **21**   | **WMI Event Binding Activity**  | 🔗 _(binding link)_  |
-
-15 Sysmon Event ID 15 tells you when **something is hiding extra data inside a file in a secret compartment** called an _alternate data stream_.
+|**Event ID**|**Name**|**Explanation**|**When to Hunt / Example**|
+|---|---|---|---|
+|**1** 🛠️|Process Creation|Logs every new process created on the system, including parent/child relationships, command line, hashes.|Hunt for suspicious tools (`mimikatz.exe`), LOLBins (`powershell.exe -enc`), malware execution from temp folders.|
+|**2** 🗑️|File Creation Time Changed|Logs changes to file creation timestamps (timestomping).|Check for attackers modifying timestamps to evade detection (`cmd.exe /c copy /b file` tricks).|
+|**3** 🌐|Network Connection|Logs outbound TCP/UDP connections from a process, including IPs, ports, domains.|Hunt for C2 traffic from unusual processes (`notepad.exe` making HTTP requests).|
+|**4** 📦|Sysmon Service State Changed|Logs when the Sysmon service is installed, stopped, or updated.|Hunt for attempts to disable monitoring before an attack.|
+|**5** 📄|Process Terminated|Logs when a process ends.|Rarely used for detection alone; useful in correlation (e.g., short-lived suspicious processes).|
+|**6** 🔄|Driver Loaded|Logs kernel-mode driver loading.|Check for unsigned or suspicious drivers (rootkits).|
+|**7** 🧩|Image Loaded (DLL)|Logs DLLs loaded into a process.|Hunt for malicious DLL injection or LOLBin DLLs (`rundll32.exe`).|
+|**8** 🔐|CreateRemoteThread|Logs threads created in another process (code injection).|Check for process injection techniques (`powershell.exe` injecting into `explorer.exe`).|
+|**9** 🧠|RawAccessRead|Logs processes reading raw disk sectors (bypassing filesystem).|Hunt for disk forensic evasion or credential dumping tools.|
+|**10** 🖇️|ProcessAccess|Logs processes accessing memory of another process.|Check for credential dumping (`lsass.exe` access).|
+|**11** 📥|File Create|Logs newly created files.|Hunt for dropped malware payloads in suspicious directories (`C:\Users\Public\`).|
+|**12** 📂|Registry Object Created|Logs registry keys created.|Look for persistence keys (`HKCU\Software\Microsoft\Windows\CurrentVersion\Run`).|
+|**13** 📝|Registry Value Set|Logs registry values changed.|Hunt for changes to `Run` keys or disabling security tools.|
+|**14** 🗑️|Registry Value Deleted|Logs deleted registry values.|Hunt for removal of forensic evidence.|
+|**15** 🔍|FileStream Created|Logs creation of alternate data streams (ADS).|Check for hidden malicious code stored in ADS.|
+|**16** ⚙️|Sysmon Config Change|Logs changes to Sysmon configuration.|Detect attempts to weaken logging.|
+|**17** 🔄|Named Pipe Created|Logs new named pipes (IPC).|Hunt for named pipes used by malware for interprocess comms.|
+|**18** 🔌|Named Pipe Connected|Logs connections to named pipes.|Check for malware C2 over named pipes.|
+|**19** 📦|WMI Event Filter|Logs creation of WMI event filters.|Hunt for WMI persistence (`SELECT * FROM __InstanceModificationEvent`).|
+|**20** 🛠️|WMI Event Consumer|Logs creation of WMI consumers.|Check for malicious WMI payloads.|
+|**21** 🔗|WMI Event Binding|Logs binding between WMI filter and consumer.|Hunt for full WMI persistence chains.|
+|**22** 🌍|DNS Query|Logs DNS requests from a process.|Hunt for suspicious domains (`xyz123abc.com`) queried by system processes.|
+|**23** 📡|File Delete (Archived)|Logs file deletions (archived in Sysmon config).|Hunt for removal of dropped malware.|
+|**24** 🛡️|Clipboard Change|Logs changes to clipboard content.|Rare; could indicate data theft via clipboard monitoring.|
+|**25** 💉|Process Tampering|Logs process hollowing, image replacement, or other tampering.|Hunt for malware injecting into legitimate processes.|
+|**26** 🔒|File Delete (Logged)|Logs file deletions (without archive).|Hunt for attackers cleaning up tools after use.|
 
 💡 **Memory Trick:**  
 - **1–7** 🖥 = Process & Image stuff.

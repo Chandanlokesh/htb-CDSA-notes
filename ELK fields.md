@@ -3,6 +3,14 @@
 
 _(These are common whether you’re looking at Sysmon, Security, or other log types — names might vary slightly depending on your ingest pipeline like Winlogbeat or Elastic Agent.)_
 
+- [Elastic Common Schema (ECS)](https://www.elastic.co/guide/en/ecs/current/ecs-reference.html)
+- [Elastic Common Schema (ECS) event fields](https://www.elastic.co/guide/en/ecs/current/ecs-event.html)
+- [Winlogbeat fields](https://www.elastic.co/guide/en/beats/winlogbeat/current/exported-fields-winlog.html)
+- [Winlogbeat ECS fields](https://www.elastic.co/guide/en/beats/winlogbeat/current/exported-fields-ecs.html)
+- [Winlogbeat security module fields](https://www.elastic.co/guide/en/beats/winlogbeat/current/exported-fields-security.html)
+- [Filebeat fields](https://www.elastic.co/guide/en/beats/filebeat/current/exported-fields.html)
+- [Filebeat ECS fields](https://www.elastic.co/guide/en/beats/filebeat/current/exported-fields-ecs.html)
+
 | Field Name                           | Emoji | Why it Matters                                                                          |
 | ------------------------------------ | ----- | --------------------------------------------------------------------------------------- |
 | **@timestamp**                       | ⏱️    | Time of the event — always key for timelines.                                           |

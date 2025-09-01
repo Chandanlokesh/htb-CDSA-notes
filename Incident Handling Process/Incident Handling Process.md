@@ -118,10 +118,10 @@ True or False: Incident handling contains two main activities. These are investi
 
 #### Preparation Prerequisites 
 - there is four key things
-	- skilled incident handling team members (in-house, outsourced)
-	- trained workforce (everyone should have basic understanding on cyber sec)
-	- clear policies and documentation (written guidelines on what to do, who does it what, when to do)
-	- tools  (without proper tools even skilled team are blind make sure to cover detection tools, analysis tools and incident management platforms)
+	- **skilled incident handling team members** (in-house, outsourced)
+	- **trained workforce** (everyone should have basic understanding on cyber sec)
+	- **clear policies and documentation** (written guidelines on what to do, who does it what, when to do)
+	- **tools**  (without proper tools even skilled team are blind make sure to cover detection tools, analysis tools and incident management platforms)
 
 #### Clear Policies & Documentation 
 - what documentation should contain
