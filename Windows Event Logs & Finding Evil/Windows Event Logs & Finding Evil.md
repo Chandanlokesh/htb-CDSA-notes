@@ -558,9 +558,9 @@ PS C:\Tools\psgetsystem> [MyProcess]::CreateProcessFromParent([Process ID of spo
 
 ```
 
-![[Pasted image 20250902002403.png]]
+![](../attachments/Pasted%20image%2020250902002403.png)
 
-![[Pasted image 20250902002729.png]]
+![](../attachments/Pasted%20image%2020250902002729.png)
 
 
 
@@ -582,4 +582,196 @@ The `etw.json` file (that includes data from the `Microsoft-Windows-Kernel-Pr
 It should be noted that SilkETW event logs can be ingested and viewed by Windows Event Viewer through `SilkService` to provide us with deeper and more extensive visibility into the actions performed on a system.
 
 ### Detection Example 2: Detecting Malicious .NET Assembly Loading
+
+1. **Background**
+
+- **Living off the Land (LotL):** Attackers abuse legitimate built-in tools (e.g., PowerShell).
+    
+- **Bring Your Own Land (BYOL):** Attackers use **custom .NET assemblies** executed in memory (no disk writes).
+    
+
+ 2. **Why .NET Assemblies Are Useful to Attackers**
+
+- Pre-installed on all Windows systems.
+    
+- Managed by CLR → no need for manual memory management.
+    
+- Assemblies can be **loaded in memory** → fewer artifacts, bypasses file-based detections.
+    
+- Rich .NET libraries (HTTP, Crypto, IPC) = built-in attacker toolkit.
+    
+- Example: **CobaltStrike `execute-assembly`** → run .NET tools directly from memory.
+    
+
+3. **Detection Strategy (Sysmon)**
+
+- Malicious .NET assemblies require loading **clr.dll** and **mscoree.dll**.
+    
+- Use **Sysmon Event ID 7 (Image Loaded)** to catch unusual DLL loads.
+    
+- Demo: Running `Seatbelt.exe` triggers these DLL loads.
+    
+- **Limitation:** Event ID 7 generates **huge volume of logs** and shows only _DLL load info_, not assembly details.
+
+![](../attachments/Pasted%20image%2020250902193201.png)
+
+![](../attachments/Pasted%20image%2020250902193251.png)
+
+4. **ETW + SilkETW for Deeper Visibility**
+
+- Use **ETW provider:** `Microsoft-Windows-DotNETRuntime`.
+    
+- Collect with **SilkETW**:
+    
+    `SilkETW.exe -t user -pn Microsoft-Windows-DotNETRuntime -uk 0x2038 -ot file -p C:\windows\temp\etw.json`
+    
+- Output (JSON) contains **detailed assembly info** (methods, JIT, loader).
+    
+![](../attachments/Pasted%20image%2020250902193338.png)
+**Selected ETW Keywords (`0x2038`):**
+
+- **JitKeyword:** Tracks Just-In-Time compilation (methods executed).
+    
+- **InteropKeyword:** Managed ↔ unmanaged code interaction (API calls, native code).
+    
+- **LoaderKeyword:** Assembly loading details (which .NET assemblies load).
+    
+- **NGenKeyword:** Precompiled assemblies usage (detects NGen bypass tricks).
+
+
+
+---
+---
+
+## Get-WinEvent
+
+- [Get-WinEvent](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.diagnostics/get-winevent?view=powershell-7.5&viewFallbackFrom=powershell-7.3) tool that is used to see the logs in the powershell
+
+```powershell
+# list all the event logs are avilable 
+
+Get-WinEvent -ListLog * | Select-Object LogName, RecordCount, IsClassicLog, IsEnabled, LogMode, LogType | Format-Table -AutoSize
+
+
+# list the provider of the event
+Get-WinEvent -ListProvider * | Format-Table -AutoSize
+
+
+```
+
+
+#### Retrieving events from the system log
+
+```powershell
+Get-WinEvent -LogName 'System' -MaxEvents 50 | Select-Object TimeCreated, ID, ProviderName, LevelDisplayName, Message | Format-Table -AutoSize
+
+```
+
+### Retrieving events from Microsoft-windows-WINRM/Operational
+
+```powershell
+Get-WinEvent -LogName 'Microsoft-Windows-WinRM/Operational' -MaxEvents 30 | Select-Object TimeCreated, ID, ProviderName, LevelDisplayName, Message | Format-Table -AutoSize
+
+# to get the oldest event flag(switch)
+-Oldest 
+```
+
+### Retrieving events from .evtx files
+
+```powershell
+Get-WinEvent -Path 'C:\Tools\chainsaw\EVTX-ATTACK-SAMPLES\Execution\exec_sysmon_1_lolbin_pcalua.evtx' -MaxEvents 5 | Select-Object TimeCreated, ID, ProviderName, LevelDisplayName, Message | Format-Table -AutoSize
+```
+
+### Filtering events with FilterHashtable
+
+```powershell
+# we can write the condation what kind of data we need like a filter int he event viewer
+
+Get-WinEvent -FilterHashtable @{LogName='Microsoft-Windows-Sysmon/Operational'; ID=1,3} | Select-Object TimeCreated, ID, ProviderName, LevelDisplayName, Message | Format-Table -AutoSize
+
+----------------------------------------------------------------------------------
+# filter the exported event file
+Get-WinEvent -FilterHashtable @{Path='C:\Tools\chainsaw\EVTX-ATTACK-SAMPLES\Execution\sysmon_mshta_sharpshooter_stageless_meterpreter.evtx'; ID=1,3} | Select-Object TimeCreated, ID, ProviderName, LevelDisplayName, Message | Format-Table -AutoSize
+
+----------------------------------------------------------------------------------
+
+# sort acoridng to date
+# use env variables 
+
+$startDate = (Get-Date -Year 2023 -Month 5 -Day 28).Date
+$endDate   = (Get-Date -Year 2023 -Month 6 -Day 3).Date
+Get-WinEvent -FilterHashtable @{LogName='Microsoft-Windows-Sysmon/Operational'; ID=1,3; StartTime=$startDate; EndTime=$endDate} | Select-Object TimeCreated, ID, ProviderName, LevelDisplayName, Message | Format-Table -AutoSize
+
+```
+
+
+### Filtering events with filterHashtable and XML
+
+```powershell
+#some suspicius activity happned in 52.113.194.132 ip
+Get-WinEvent -FilterHashtable @{LogName='Microsoft-Windows-Sysmon/Operational'; ID=3} |
+`ForEach-Object {
+$xml = [xml]$_.ToXml()
+$eventData = $xml.Event.EventData.Data
+New-Object PSObject -Property @{
+    SourceIP = $eventData | Where-Object {$_.Name -eq "SourceIp"} | Select-Object -ExpandProperty '#text'
+    DestinationIP = $eventData | Where-Object {$_.Name -eq "DestinationIp"} | Select-Object -ExpandProperty '#text'
+    ProcessGuid = $eventData | Where-Object {$_.Name -eq "ProcessGuid"} | Select-Object -ExpandProperty '#text'
+    ProcessId = $eventData | Where-Object {$_.Name -eq "ProcessId"} | Select-Object -ExpandProperty '#text'
+}
+}  | Where-Object {$_.DestinationIP -eq "52.113.194.132"}
+
+--------------------------------------------------------------------------------
+#`clr.dll` and `mscoree.dll` loading activity 
+ $Query = @"
+	<QueryList>
+		<Query Id="0">
+			<Select Path="Microsoft-Windows-Sysmon/Operational">*[System[(EventID=7)]] and *[EventData[Data='mscoree.dll']] or *[EventData[Data='clr.dll']]
+			</Select>
+		</Query>
+	</QueryList>
+	"@"
+
+Get-WinEvent -FilterXml $Query | ForEach-Object {Write-Host $_.Message `n}
+
+```
+
+This script will retrieve all Sysmon network connection events (ID 3), parse the XML data for each event to retrieve specific details (source IP, destination IP, Process GUID, and Process ID), and filter the results to include only events where the destination IP matches the suspected IP.
+
+### Filtering events with FilterXPath
+
+its just combining the filter with xml
+
+```powershell
+
+# process creation
+
+Get-WinEvent -LogName 'Microsoft-Windows-Sysmon/Operational' `
+-FilterXPath "*[EventData[Data[@Name='Image']='C:\Windows\System32\reg.exe']] 
+and *[EventData[Data[@Name='CommandLine']='`"C:\Windows\system32\reg.exe`" ADD HKCU\Software\Sysinternals /v EulaAccepted /t REG_DWORD /d 1 /f']]" `
+| Select-Object TimeCreated, ID, ProviderName, LevelDisplayName, Message `
+| Format-Table -AutoSize
+
+--------------------------------------------------------------------------------
+# network connections to a particular suspicious 52.113.194.132
+
+Get-WinEvent -LogName 'Microsoft-Windows-Sysmon/Operational' -FilterXPath "*[System[EventID=3] and EventData[Data[@Name='DestinationIp']='52.113.194.132']]"
+
+```
+
+### Filtering events based on property values
+
+```powershell
+# list all the property of sysmon 1 log
+Get-WinEvent -FilterHashtable @{LogName='Microsoft-Windows-Sysmon/Operational'; ID=1} -MaxEvents 1 | Select-Object -Property *
+
+--------------------------------------------------------------------------------
+# process create event and parent commandline field 21 and "-enc" is the where the command is encrypted
+
+Get-WinEvent -FilterHashtable @{LogName='Microsoft-Windows-Sysmon/Operational'; ID=1} `
+| Where-Object {$_.Properties[21].Value -like "*-enc*"} `
+| Format-List
+
+```
+
 
