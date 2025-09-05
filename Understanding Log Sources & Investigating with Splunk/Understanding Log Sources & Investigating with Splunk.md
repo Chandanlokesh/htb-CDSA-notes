@@ -1,4 +1,4 @@
-
+![](../attachments/Pasted%20image%2020250905181823.png)
 ## introduction to splunk and SPL
 
 ![](../attachments/Pasted%20image%2020250905103421.png)
@@ -398,6 +398,159 @@ The Sysmon Events with ID 11 do not contain a field named `Computer`, but they 
 Access the Sysmon App for Splunk, go to the "Network Activity" tab, and choose "Network Connections". Fix the search and provide the number of connections that SharpHound.exe has initiated as your answer.
 `6`
 
+
+---
+---
+
+## Intrusion detection with splunk (real world scenario)
+
+`some data sets`
+[BOTS](https://github.com/splunk/botsv3). Alternatively, [nginx_json_logs](https://raw.githubusercontent.com/elastic/examples/refs/heads/master/Common%20Data%20Formats/nginx_json_logs/nginx_json_logs) is a handy resource providing us with dummy logs in JSON format.
+
+
+```shell
+#see what are all the data available
+index="main" earliest=0
+```
+
+
+**check what are all the data are available**
+
+```shell
+index=main | stats count by sourcetype
+```
+
+
+**look at sysmon logs**
+```shell
+index=main sourcetype="WinEventLog:Sysomon"
+```
+
+search for `uniwaldo.local`
+```shell
+index=main "uniwaldo.local"
+index=main "*uniwaldo.local*"
+
+#more efficient
+
+index=main ComputerName="*uniwaldo.local*"
+```
+
+
+### Embracing The Mindset Of Analysts, Threat Hunters, & Detection Engineers
+
+**listing the eventcode and its count in the dataset**
+
+```shell
+index=main sourcetype:"WinEventLog:Sysmon" | stats count by EventCode
+```
+
+
+**unusual parent-child trees**
+
+```shell
+index="main" sourcetype="WinEventLog:Sysmon" EventCode=1 
+| stats count by ParentImage, Image
+
+# check for cmd and powershell image 
+index="main" sourcetype="WinEventLog:Sysmon" EventCode=1 (Image=*cmd.exe* OR Image=*powershell.exe*)
+| stats count by ParentImage, Image
+
+```
+
+**notepad was started cmd and powershell dive deeper** 
+
+```shell
+index="main" sourcetype="WinEventLog:Sysmon" EventCode=1 (Image=*cmd.exe* OR Image=*powershell.exe*) ParentImage="C:\\Windows\\System32\\notepad.exe"
+```
+
+**so note pad is executed some command that is connecting 10.0.0.229 we need to check the source type **
+
+```shell
+index="main" 10.0.0.229 
+|  stats count by sourcetype
+```
+
+
+**we can see linux is also communicated with the ip. we can see which ** 
+```shell
+index="main" 10.0.0.229 sourcetype="linux:syslog"
+```
+
+**we need to check in win. any command that has this IP**
+```shell
+index=main 10.0.0.229 sourcetype="WinEventLog:sysmon" | stats count by CommandLine, host
+```
+
+**it might be DCSync attack so to detect that we search 4662 and access was extended right 0x100 and user account not a system account**
+
+```shell
+index=main EventCode=4662 Access_Mask=0x100 Account_Name!=*$
+```
+we check the properties field to conform the attack 
+object type 
+{19195a5b-6da0-11d0-afd3-00c04fd930c9}
+
+this obj was accessed 
+this attack is used to replicate AD objects to dump password hashes from the domain controller
+
+**next we look for lsass dumping**
+```shell
+index=main EventCode=10 lsass | stats count by SourceImage
+
+#explore notepad
+index="main" EventCode=10 lsass SourceImage="C:\\Windows\\System32\\notepad.exe"
+
+```
+
+### creating meaningful alerts
+
+`create an alert to detect malware making API calls firm UNKNOWN memory regions (protential shellcod/ injection)`
+
+**setp 1: find where UNKNOWN show up**
+```shell
+index="main" CallTrace="*UNKNOWN*" | stats count by EventCode
+```
+
+
+**step 2: group by process (sourceimage)**
+```shell
+index="main" CallTrace="*UNKNOWN*" | stats count by SourceImage
+```
+
+many false positivies like .NET JIT or electron apps
+
+**step3: filter out obvious noise**
+```shell
+| where SourceImage!=TargetImage
+```
+
+exclude .NET JIT
+```shell
+... SourceImage!="*Microsoft.NET*" CallTrace!=*ni.dll* CallTrace!=*clr.dll*
+```
+exclude WOOW64 noise
+
+```shell
+... CallTrace!=*wow64*
+```
+exclude explorer
+```shell
+... SourceImage!="C:\\Windows\\Explorer.EXE"
+```
+
+**step4: refine** 
+```shell
+index="main" CallTrace="*UNKNOWN*" 
+  SourceImage!="*Microsoft.NET*" CallTrace!=*ni.dll* CallTrace!=*clr.dll* CallTrace!=*wow64* 
+  SourceImage!="C:\\Windows\\Explorer.EXE" 
+| where SourceImage!=TargetImage 
+| stats count by SourceImage, TargetImage, CallTrace
+
+```
+
+
+
 ---
 ---
 
@@ -621,3 +774,18 @@ index="main" sourcetype="WinEventLog:Sysmon" EventCode=8
 
 ---
 ---
+
+## skill assessment
+
+Navigate to http://[Target IP]:8000, open the "Search & Reporting" application, and find through SPL searches against all data the process that created remote threads in rundll32.exe. Answer format: _.exe
+
+```shell
+
+index="main" sourcetype="WinEventLog:Sysmon" EventCode=8 TargetImage=*rundll32.exe
+| stats count by SourceImage, TargetImage
+
+```
+
+Navigate to http://[Target IP]:8000, open the "Search & Reporting" application, and find through SPL searches against all data the process that started the infection. Answer format: _.exe
+
+rundll32.exe
