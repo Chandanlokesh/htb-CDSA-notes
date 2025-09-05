@@ -37,33 +37,34 @@
 
 #### 🔐 **Windows Security Logs**
 
-| Event ID        | Emoji  | Name                            | Why it Matters                                                                  |
-| --------------- | ------ | ------------------------------- | ------------------------------------------------------------------------------- |
-| **1102**        | 🧹     | Audit Log Cleared               | Often used to hide tracks after intrusion.                                      |
-| **1116**        | 🦠     | AV Malware Detection            | Defender spotted malware — monitor for spikes.                                  |
-| **1118**        | 🛠️    | AV Remediation Started          | Defender started removing/quarantining malware.                                 |
-| **1119**        | ✅      | AV Remediation Succeeded        | Malware cleanup was successful.                                                 |
-| **1120**        | ❌      | AV Remediation Failed           | Malware removal failed — urgent action needed.                                  |
-| **4624**        | 🔑     | Successful Logon                | Track normal vs. unusual logon patterns.                                        |
-| **4625**        | 🚫     | Failed Logon                    | Multiple failures may mean brute-force attack.                                  |
-| **4648**        | 👤➡️💻 | Logon with Explicit Credentials | May indicate lateral movement attempts.                                         |
-| **4656**        | 📂     | Handle to Object Requested      | Watch for sensitive resource access attempts.                                   |
-| **4688**        | ⚙️     | Process Creation                | Logs every new process — critical for detecting malicious tools/scripts usage.  |
-| **4672**        | 👑     | Special Privileges Logon        | Admin-level access given — monitor for abuse.                                   |
-| **4698**        | ⏰      | Scheduled Task Created          | Attackers use for persistence — suspicious if unexpected.                       |
-| **4700 / 4701** | 🔄⏰    | Task Enabled / Disabled         | Changing scheduled tasks could hide malicious jobs.                             |
-| **4702**        | ✏️⏰    | Scheduled Task Updated          | Updates to tasks could mean altered malicious jobs.                             |
-| **4719**        | 📝     | Audit Policy Changed            | Could be disabling logging to hide actions.                                     |
-| **4738**        | 👤✏️   | User Account Changed            | Unexpected changes may mean account takeover.                                   |
-| **4771**        | 🛡️    | Kerberos Pre-auth Failed        | Possible brute-force attempt on Kerberos.                                       |
-| **4776**        | 🗝️    | Credential Validation Attempt   | Multiple failures may mean credential stuffing.                                 |
-| **4907**        | 📝     | Audit Policy Change (Object)    | Shows modifications to object-level auditing, often a sign of evasion attempts. |
-| **5001**        | ⚙️🦠   | AV Real-Time Protection Changed | Could indicate disabling security features.                                     |
-| **5140**        | 📂🌐   | Network Share Accessed          | Watch for sensitive file access over network.                                   |
-| **5142**        | ➕🌐    | Network Share Created           | Could be for data theft or malware spread.                                      |
-| **5145**        | 🔍🌐   | Network Share Access Check      | Mapping network shares — possible recon step.                                   |
-| **5157**        | 🚫🌐   | Connection Blocked (WFP)        | WFP blocked suspicious network traffic.                                         |
-| **7045**        | 🛠️📦  | Service Installed               | Unknown services might be malware.                                              |
+| Event ID                   | Emoji  | Name                                        | Why it Matters                                                                            |
+| -------------------------- | ------ | ------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| **1102**                   | 🧹     | Audit Log Cleared                           | Often used to hide tracks after intrusion.                                                |
+| **1116**                   | 🦠     | AV Malware Detection                        | Defender spotted malware — monitor for spikes.                                            |
+| **1118**                   | 🛠️    | AV Remediation Started                      | Defender started removing/quarantining malware.                                           |
+| **1119**                   | ✅      | AV Remediation Succeeded                    | Malware cleanup was successful.                                                           |
+| **1120**                   | ❌      | AV Remediation Failed                       | Malware removal failed — urgent action needed.                                            |
+| **4624**                   | 🔑     | Successful Logon                            | Track normal vs. unusual logon patterns.                                                  |
+| **4625**                   | 🚫     | Failed Logon                                | Multiple failures may mean brute-force attack.                                            |
+| **4648**                   | 👤➡️💻 | Logon with Explicit Credentials             | May indicate lateral movement attempts.                                                   |
+| **4656**                   | 📂     | Handle to Object Requested                  | Watch for sensitive resource access attempts.                                             |
+| **4688**                   | ⚙️     | Process Creation                            | Logs every new process — critical for detecting malicious tools/scripts usage.            |
+| **4672**                   | 👑     | Special Privileges Logon                    | Admin-level access given — monitor for abuse.                                             |
+| **4698**                   | ⏰      | Scheduled Task Created                      | Attackers use for persistence — suspicious if unexpected.                                 |
+| **4700 / 4701**            | 🔄⏰    | Task Enabled / Disabled                     | Changing scheduled tasks could hide malicious jobs.                                       |
+| **4702**                   | ✏️⏰    | Scheduled Task Updated                      | Updates to tasks could mean altered malicious jobs.                                       |
+| **4719**                   | 📝     | Audit Policy Changed                        | Could be disabling logging to hide actions.                                               |
+| **4738**                   | 👤✏️   | User Account Changed                        | Unexpected changes may mean account takeover.                                             |
+| **4768**<br>or<br>**4769** |        | TGT request<br>or<br>service ticket request | kerberos ticket requests TGT request<br>or server ticket request in windows security logs |
+| **4771**                   | 🛡️    | Kerberos Pre-auth Failed                    | Possible brute-force attempt on Kerberos.                                                 |
+| **4776**                   | 🗝️    | Credential Validation Attempt               | Multiple failures may mean credential stuffing.                                           |
+| **4907**                   | 📝     | Audit Policy Change (Object)                | Shows modifications to object-level auditing, often a sign of evasion attempts.           |
+| **5001**                   | ⚙️🦠   | AV Real-Time Protection Changed             | Could indicate disabling security features.                                               |
+| **5140**                   | 📂🌐   | Network Share Accessed                      | Watch for sensitive file access over network.                                             |
+| **5142**                   | ➕🌐    | Network Share Created                       | Could be for data theft or malware spread.                                                |
+| **5145**                   | 🔍🌐   | Network Share Access Check                  | Mapping network shares — possible recon step.                                             |
+| **5157**                   | 🚫🌐   | Connection Blocked (WFP)                    | WFP blocked suspicious network traffic.                                                   |
+| **7045**                   | 🛠️📦  | Service Installed                           | Unknown services might be malware.                                                        |
 
 ---
 

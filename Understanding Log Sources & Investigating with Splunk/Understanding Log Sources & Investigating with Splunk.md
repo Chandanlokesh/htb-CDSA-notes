@@ -1,21 +1,402 @@
 
-## Intrusion detection with splunk (real world scenario)
+## introduction to splunk and SPL
+
+![](../attachments/Pasted%20image%2020250905103421.png)
 
 
+![](../attachments/Pasted%20image%2020250905103507.png)
 
 
+`Forwarders (Data collection layer)`
+collects and send machine data to indexers
+- **Universal forwarder (UF)** 
+	- lightweight agent, minimal resource use
+	- collects and forwards data (no parsing)
+- **Heavy forwarder (HF)**
+	- parses and filters data before forwarding
+	- has lot of filtering features only in enterprise version
+- **HTTP Event Collector (HEC)**
+	- collects data directly form apps via tokens 
+	- sends data directly to indexers
+
+`Indexers (data storage and search layer)`
+- receive and store data in indexes (compressed raw data + index files)
+- organize data into directories by age (buckets)
+- handle search queries 
+
+`Search Heads (search and use interaction layer)`
+- coordinate and dispatch search jobs to indexers and merge results and present them to users
+- provide UI for searching 
+- allows creating knowledge objects (fields, tags macros ...) without altering raw data
+
+`Managemant Components`
+- **Deployment Server** → Manages forwarder configurations, distributes apps/updates.
+- **Cluster Master** → Manages Indexer clusters (replication, search affinity).
+- **License Master** → Manages Splunk license usage & compliance.
+
+`Key components`
+- **Splunk Web Interface** → GUI for search, dashboards, alerts, reports.
+- **Search Processing Language (SPL)** → Query language to search, filter, analyze data.
+- **Apps & Add-ons**
+    - **Apps** → Complete solutions (dashboards, pre-configs, workflows).
+    - **Technology Add-ons (TAs)** → Extend Splunk with extra field extractions, data collection configs, transforms, scripts.
+    - Apps often **use one or more TAs**.
+- **Knowledge Objects** → Customizations to enrich data:
+    - Fields, tags, event types, lookups, macros, data models, alerts.
 
 
+```
+Forearders -> Indexers -> search Heads -> Users
+```
 
 
+### SPL (splunk processing language)
+
+| **SPL Command / Concept**         | **Description**                                                                                                          | **Example Query**                                                                                                                                                                                                                | **Explanation**                                                                                                                                                                                                                                                                        |
+| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Basic Searching**               | Search for keywords, phrases, or patterns in events.                                                                     | `search index="main" "UNKNOWN"` `index="main" "*UNKNOWN*"`                                                                                                                                                                       | First query searches for exact word **UNKNOWN**. Second query uses `*` as a wildcard to match **any word containing UNKNOWN**.                                                                                                                                                         |
+| **Fields & Comparison Operators** | Filters events using fields and conditions. Operators: `=`, `!=`, `<`, `>`, `<=`, `>=`                                   | `index="main" EventCode!=1`                                                                                                                                                                                                      | Searches all events in **main index** where `EventCode` is **NOT equal to 1**.                                                                                                                                                                                                         |
+| **fields**                        | Show or hide specific fields in results.                                                                                 | `index="main" sourcetype="WinEventLog:Sysmon" EventCode=1 \| fields - User`                                                                                                                                                      | Removes the `User` field from the output. (`fields` can **include** or **exclude** fields).                                                                                                                                                                                            |
+| **stats**                         | performs statistical operations (count, avg, sum, min, max, distinct count, etc) on fields grouped by one or more fields | `index="main" sourcetype="WinEventLog:Sysmon" EventCode=3 \| stats count BY _time, Image`                                                                                                                                        | Returns a table where each row = unique combination of `_time` and `Image`. The `count` column shows how many network connection events occurred for that process at that time. Supports many functions: `count`, `dc(field)`, `sum(field)`, `avg(field)`, `min(field)`, `max(field)`. |
+| **table**                         | Displays results in a clean table format.                                                                                | `index="main" sourcetype="WinEventLog:Sysmon" EventCode=1 \| table _time, host, Image`                                                                                                                                           | Shows only the selected fields (`_time`, `host`, `Image`) in a tabular view.                                                                                                                                                                                                           |
+| **rename**                        | Renames fields for readability.                                                                                          | `index="main" sourcetype="WinEventLog:Sysmon" EventCode=1 \| rename Image as Process`                                                                                                                                            | Changes the field name `Image` → `Process` in results.                                                                                                                                                                                                                                 |
+| **dedup**                         | Removes duplicate values for a field.                                                                                    | `index="main" sourcetype="WinEventLog:Sysmon" EventCode=1 \| dedup Image`                                                                                                                                                        | Only keeps the **first unique occurrence** of `Image`, removing duplicates.                                                                                                                                                                                                            |
+| **sort**                          | Sorts results in ascending/descending order.                                                                             | `index="main" sourcetype="WinEventLog:Sysmon" EventCode=1 \| sort - _time`                                                                                                                                                       | Sorts events by `_time` in **descending order** (latest first). Use `+` or no sign for ascending.                                                                                                                                                                                      |
+| **chart**                         | Creates statistical visualizations (charts).                                                                             | `index="main" sourcetype="WinEventLog:Sysmon" EventCode=3 \| chart count by _time, Image`                                                                                                                                        | Produces a chart with **count of events** grouped by `_time` and `Image`.                                                                                                                                                                                                              |
+| **eval**                          | Creates or modifies fields with expressions.                                                                             | `index="main" sourcetype="WinEventLog:Sysmon" EventCode=1 \| eval Process_Path=lower(Image)`                                                                                                                                     | Creates new field `Process_Path` by converting `Image` values to **lowercase**.                                                                                                                                                                                                        |
+| **rex**                           | Extracts fields using regex patterns.                                                                                    | `index="main" EventCode=4662 \| rex max_match=0 "[^%](?<guid>{.*})" \| table guid`                                                                                                                                               | Extracts all GUID values matching the regex into a new field `guid`.                                                                                                                                                                                                                   |
+| **lookup**                        | Enriches data with external CSV lookup files.                                                                            | `index="main" \| lookup malware_lookup.csv filename OUTPUT is_malware`                                                                                                                                                           | Matches `filename` in events with lookup file and adds `is_malware` column.                                                                                                                                                                                                            |
+| **inputlookup**                   | Reads lookup files directly (without search).                                                                            | `\| inputlookup malware_lookup.csv`                                                                                                                                                                                              | Displays all rows in the lookup file `malware_lookup.csv`.                                                                                                                                                                                                                             |
+| **Time Range Filtering**          | Restricts search by time (using earliest/latest).                                                                        | `index="main" earliest=-7d EventCode!=1`                                                                                                                                                                                         | Returns events from **last 7 days**, excluding `EventCode=1`.                                                                                                                                                                                                                          |
+| **transaction**                   | Groups related events into a single "transaction".                                                                       | `index="main" sourcetype="WinEventLog:Sysmon" (EventCode=1 OR EventCode=3) \| transaction`                                                                                                                                       | Groups together related EventCode 1 & 3 logs into a **session-like transaction**.                                                                                                                                                                                                      |
+| **Subsearches**                   | Nested searches used inside brackets `[ ]`.                                                                              | `index="main" sourcetype="WinEventLog:Sysmon" EventCode=1 NOT [ search index="main" sourcetype="WinEventLog:Sysmon" EventCode=1 \| top limit=100 Image \| fields Image ] \| table _time, Image, CommandLine, User, ComputerName` | Subsearch finds **top 100 Images** and excludes them from the main search. Then shows details of the remaining processes.                                                                                                                                                              |
 
 
+**This CSV file should be added as a new Lookup table as follows.**
 
 
+![](../attachments/Pasted%20image%2020250905111956.png)
 
 
+![](../attachments/Pasted%20image%2020250905112040.png)
+
+![](../attachments/Pasted%20image%2020250905112128.png)
+
+![](../attachments/Pasted%20image%2020250905112209.png)
 
 
+`important`
+- [https://docs.splunk.com/Documentation/SCS/current/SearchReference/Introduction](https://docs.splunk.com/Documentation/SCS/current/SearchReference/Introduction)
+- [https://docs.splunk.com/Documentation/SplunkCloud/latest/SearchReference/](https://docs.splunk.com/Documentation/SplunkCloud/latest/SearchReference/)
+- [https://docs.splunk.com/Documentation/SplunkCloud/latest/Search/](https://docs.splunk.com/Documentation/SplunkCloud/latest/Search/)
+
+### How To Identify The Available Data
+
+
+#### **1. eventcount**
+
+- **Purpose:** Shows the number of events across all indexes.
+    
+- **Example SPL:**
+    
+
+`| eventcount summarize=false index=* | table index`
+
+- **Explanation:** Counts events for each index individually. `summarize=false` prevents aggregation across time or indexes. `table index` formats the output in a simple table, showing only index names and counts.
+    
+
+---
+
+#### **2. metadata**
+
+- **Purpose:** Retrieves metadata about sourcetypes or sources. Useful to identify available data sources and their characteristics.
+    
+
+##### a) Metadata for sourcetypes
+
+- **Example SPL:**
+    
+
+`| metadata type=sourcetypes`
+
+- **Explanation:** Lists all sourcetypes with information such as:
+    
+    - `firstTime`: When the sourcetype first appeared
+        
+    - `lastTime`: When it was last seen
+        
+    - `totalCount`: Number of events
+        
+
+##### b) Simplified metadata for sourcetypes
+
+- **Example SPL:**
+    
+
+`| metadata type=sourcetypes index=* | table sourcetype`
+
+- **Explanation:** Displays only the sourcetype names in a table. Useful for quickly identifying all data types in the environment.
+    
+
+##### c) Metadata for sources
+
+- **Example SPL:**
+    
+
+`| metadata type=sources index=* | table source`
+
+- **Explanation:** Shows all unique data sources ingested into Splunk, such as files, logs, or scripts.
+    
+
+---
+
+#### **3. table**
+
+- **Purpose:** Displays selected fields from events in tabular form.
+    
+
+##### a) Show raw event data
+
+- **Example SPL:**
+    
+
+`sourcetype="WinEventLog:Security" | table _raw`
+
+- **Explanation:** Shows the complete raw event data for the specified sourcetype. Useful to understand what the original log looks like.
+    
+
+##### b) Show all fields
+
+- **Example SPL:**
+    
+
+`sourcetype="WinEventLog:Security" | table *`
+
+- **Explanation:** Displays every field extracted from the events of a sourcetype. ⚠️ Can be very wide if many fields exist. Good for exploring available fields.
+    
+
+##### c) Show specific fields
+
+- **Example SPL:**
+    
+
+`sourcetype="WinEventLog:Security" | fields Account_Name, EventCode | table Account_Name, EventCode`
+
+- **Explanation:** Displays only the selected fields in a table. Makes analysis easier by focusing on relevant information.
+    
+
+---
+
+#### **4. fieldsummary**
+
+- **Purpose:** Summarizes all fields found in events and provides statistics.
+    
+- **Example SPL:**
+    
+
+`sourcetype="WinEventLog:Security" | fieldsummary`
+
+- **Explanation:** Returns stats per field:
+    
+    - Count of events containing the field
+        
+    - Number of distinct values
+        
+    - Minimum, maximum, mean, standard deviation
+        
+    - Sample values
+        
+- Useful for discovering key fields or detecting anomalies.
+    
+
+---
+
+#### **5. bucket + stats + sort**
+
+- **Purpose:** Groups events by time and counts them, with sorting.
+    
+- **Example SPL:**
+    
+
+`index=* sourcetype=* | bucket _time span=1d | stats count BY _time, index, sourcetype | sort - _time`
+
+- **Explanation:**
+    
+    - `bucket _time span=1d` groups events into 1-day intervals
+        
+    - `stats count BY _time, index, sourcetype` counts events for each combination
+        
+    - `sort - _time` sorts by latest day first
+        
+- Useful for trend analysis over time.
+    
+
+---
+
+#### **6. rare**
+
+- **Purpose:** Identifies uncommon or unusual events.
+    
+
+##### a) Rare indexes & sourcetypes
+
+- **Example SPL:**
+    
+
+`index=* sourcetype=* | rare limit=10 index, sourcetype`
+
+- **Explanation:** Lists the 10 least common combinations of index and sourcetype. Useful for spotting rare or abnormal event types.
+    
+
+##### b) Rare field values
+
+- **Example SPL:**
+    
+
+`index="main" | rare limit=20 useother=f ParentImage`
+
+- **Explanation:** Shows the 20 least common values of a specific field (`ParentImage`). Helps detect unusual parent processes.
+    
+
+##### c) Rare combinations of multiple fields
+
+- **Example SPL:**
+    
+
+`index=* sourcetype=* | rare limit=10 field1, field2, field3`
+
+- **Explanation:** Finds the 10 least common combinations of specified fields. Replace `field1, field2, field3` with fields of interest. Useful for anomaly detection across multiple attributes.
+    
+
+---
+
+#### **7. fieldsummary + where**
+
+- **Purpose:** Summarizes fields with filtering.
+    
+- **Example SPL:**
+    
+
+`index=* sourcetype=* | fieldsummary | where count < 100 | table field, count, distinct_count`
+
+- **Explanation:** Filters the field summary to show only fields appearing in fewer than 100 events. Useful for detecting rare or unusual fields.
+    
+
+---
+
+#### **8. sistats**
+
+- **Purpose:** Summarizes events across multiple dimensions.
+    
+- **Example SPL:**
+    
+
+`index=* | sistats count BY index, sourcetype, source, host`
+
+- **Explanation:** Aggregates event counts by index, sourcetype, source, and host. Helps visualize data diversity and distribution across the environment.
+
+### Data and field identification approach 2: Leverage Splunk's User Interface
+
+
+- Data sources
+	- settings ->data inputs
+	- we can list various data input methods including files and directories many more
+- Data (Events)
+	- search & reporting app
+	- `fast mode` for quick scan through 
+	- `verbose mode` dive deep into each events
+	- `*` in the search bar will bring all the indexed data
+	- can select the time range
+- Fields
+	- if we click on any event we can see the data in the left side all the available fields 
+	- selected fields, interesting fields, all fields
+- Data models
+	-  provide an organized, hierarchical view of our data, simplifying complex datasets into understandable structures. They're designed to make it easier to create meaningful reports, visualizations, and dashboards without needing a deep understanding of the underlying data sources or the need to write complex SPL queries.
+	- `accessing data models` settings --> Data Models (under the knowledge section)--> if we did not find anything then execute any query 
+	- `understand existing data models` we see list of available data models . these might include models created by ourselves 
+	- `Exploring Data Models`: By clicking on the name of a Data Model, we are taken to the `Data Model Editor`. This is where the true power of Data Models lies. Here, we can view the hierarchical structure of the data model, which is divided into `objects`. Each object represents a specific part of our data and contains `fields` that are relevant to that object.
+![](../attachments/Pasted%20image%2020250905122707.png)
+
+- `Pivots` that allows us to create complex reports and visualizations without writing SPL queries. They provide an interactive, drag-and-drop interface for defining and refining our data reporting criteria. As such, they're also a fantastic tool for identifying and exploring the available data and fields within our Splunk environment. To start with Pivots to identify available data and fields, we can use the `Pivot` button that appears when we're browsing a particular data model in the `Data Models` page.
+![](../attachments/Pasted%20image%2020250905122828.png)
+
+![](../attachments/Pasted%20image%2020250905122900.png)
+
+### Questions
+
+Navigate to http://[Target IP]:8000, open the "Search & Reporting" application, and find through an SPL search against all data the account name with the highest amount of Kerberos authentication ticket requests. Enter it as your answer.
+
+```
+index=* EventCode=4768
+| stats count by Account_Name
+```
+
+Navigate to http://[Target IP]:8000, open the "Search & Reporting" application, and find through an SPL search against all 4624 events the count of distinct computers accessed by the account name SYSTEM. Enter it as your answer.
+
+```
+index=* EventCode=4624 Account_Name="SYSTEM"
+| stats dc(ComputerName)
+```
+
+
+Navigate to http://[Target IP]:8000, open the "Search & Reporting" application, and find through an SPL search against all 4624 events the account name that made the most login attempts within a span of 10 minutes. Enter it as your answer.
+
+```
+index=* EventCode=4624
+| stats min(_time) as first_time max(_time) as last_time count by Account_Name
+| eval span = last_time - first_time
+| eval logins_per_10min = (count / span) * 600
+| sort - logins_per_10min
+| head 1
+```
+
+
+---
+---
+
+## Using splunk applications
+
+
+- apps, are packages that we add to our Splunk Enterprise or Splunk Cloud deployments to extend capabilities and manage specific types of operational data
+- In this segment, we'll be leveraging the `Sysmon App for Splunk` developed by Mike Haag.
+- pre-built dashboards, search capability and knowledge objects 
+
+1. Sign up for a free account at [splunkbase](https://splunkbase.splunk.com/)
+2. 1. Once registered, log into your account
+3. Head over to the [Sysmon App for Splunk](https://splunkbase.splunk.com/app/3544) page to download the application.
+4. Add the application 
+
+![](../attachments/Pasted%20image%2020250905130816.png)
+
+![](../attachments/Pasted%20image%2020250905130904.png)
+
+upload the file 
+5. Adjust the application's [macro](https://docs.splunk.com/Documentation/Splunk/latest/Knowledge/Definesearchmacros) so that events are loaded as follows. (no need to specify every time )
+
+![](../attachments/Pasted%20image%2020250905131053.png)
+
+add new
+
+![](../attachments/Pasted%20image%2020250905131143.png)
+
+Let's access the Sysmon App for Splunk by locating it in the "Apps" column on the Splunk home page and head over to the `File Activity` tab.
+
+![](../attachments/Pasted%20image%2020250905131240.png)
+
+Let's now specify "All time" on the time picker and click "Submit". Results are generated successfully; however, no results are appearing in the "Top Systems" section.
+We can fix that by clicking on "Edit" (upper right hand corner of the screen) and editing the search.
+
+![](../attachments/Pasted%20image%2020250905131419.png)
+
+The Sysmon Events with ID 11 do not contain a field named `Computer`, but they do include a field called `ComputerName`. Let's fix that and click "Apply"
+
+![](../attachments/Pasted%20image%2020250905131509.png)
+### questions
+ Access the Sysmon App for Splunk and go to the "Reports" tab. Fix the search associated with the "Net - net view" report and provide the complete executed command as your answer. Answer format: net view /Domain:_.local
+`net view /DOMAIN:uniwaldo.local`
+
+Access the Sysmon App for Splunk, go to the "Network Activity" tab, and choose "Network Connections". Fix the search and provide the number of connections that SharpHound.exe has initiated as your answer.
+`6`
 
 ---
 ---
