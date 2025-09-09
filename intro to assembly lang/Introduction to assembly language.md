@@ -1,3 +1,20 @@
+- [x] computer architecture
+- [x] cpu architecture
+- [x] instruction set architectures
+- [ ] registers, addresses and data type
+- [ ] assembling and disassembling
+- [ ] data movement
+- [ ] arithmetic instructions
+- [ ] loops
+- [ ] unconditional branching
+- [ ] conditional branching
+- [ ] using the stack
+- [ ] procedures
+- [ ] functions
+
+
+
+
 ![](../attachments/Pasted%20image%2020250906094048.png)
 
 ## Assembly Language
