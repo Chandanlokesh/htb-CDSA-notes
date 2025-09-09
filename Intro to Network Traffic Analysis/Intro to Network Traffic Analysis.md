@@ -300,3 +300,241 @@ green - info field
 
 ---
 ---
+## The Analysis Process
+
+### Network Traffic Analysis (NTA)
+- **Definition:** A systematic examination of network data to identify its origin, purpose, and impact.
+- **Goal:**
+    - Detect malicious or abnormal behavior.
+    - Spot deviations from what’s considered _normal network traffic_.
+    - Troubleshoot operational/network issues.
+🔑 **Key Idea:** NTA = breaking down traffic into understandable chunks + comparing them against a baseline (what’s normal).
+
+- Always set a **baseline** → compare normal vs abnormal.
+- Use **tools + human judgment together** for strongest defense.
+
+### Analysis Dependencies in Network Traffic Analysis
+
+**Two Types of Traffic Capture**
+
+**Passive Capture**
+- Copying network traffic without interfering with it.
+- **Where used:** Often for monitoring or forensic investigations.
+- **Key Point:** You’re just a spectator — no changes made to the flow.
+- like a CCTV just monitor
+
+**Active Capture (In-line Capture)**
+- Placing a device _in-line_ with the traffic so that packets actually flow through you.
+- **Where used:** When full visibility is needed at routing/switching points.
+- **Key Point:** More intrusive and requires topology changes.
+- putting a toll both in the main road
+
+### Dependencies (Requirements for Capture)
+
+| **Dependency**                  | **Passive** | **Active** | **Explanation & Analogy**                                                                                                                                                                        |
+| ------------------------------- | ----------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Permission**                  | ☑           | ☑          | Must have written approval (legal & ethical). 🔑 **Analogy:** Like needing a driver’s license to be on the road — without it, you’re breaking the law.                                           |
+| **Mirrored Port**               | ☑           | ☐          | Switch/router port copies traffic to your NIC in promiscuous mode. 🔑 **Analogy:** Like setting up a **rearview mirror** to watch all the cars behind without entering the road.                 |
+| **Capture Tool**                | ☑           | ☑          | Tools like Wireshark, TCPDump, Netminer needed. Beware of large PCAP files consuming CPU/RAM. 🔑 **Analogy:** Your **magnifying glass** to inspect packets.                                      |
+| **In-line Placement**           | ☐           | ☑          | Requires inserting a Tap in-line (topology change). 🔑 **Analogy:** Like building a **checkpoint** in the middle of the road.                                                                    |
+| **Network Tap / Multiple NICs** | ☐           | ☑          | A dual-NIC system or network Tap to let traffic flow normally while duplicating it. 🔑 **Analogy:** Like placing a **water divider** in a pipe so flow continues, but you also collect a sample. |
+| **Storage & Processing Power**  | ☑           | ☑          | Needed in both, but **more critical for active** (more traffic volume). 🔑 **Analogy:** Passive = filling a cup from a fountain, Active = filling a teacup with a firehose.                      |
+
+---
+---
+## Analysis in Practice
+
+NTA workflow is not fixed loop its adopts 
+
+the process can be broken into four core **types of analysis**
+1. Descriptive - what is happening 
+2. Diagnostic - why its happening
+3. Predictive - what might happen next
+4. Prescriptive - what should we do about it 
+
+### Descriptive analysis
+- what is the issue
+- **task**
+	-  Define the **issue** (suspected breach? network slowdown?). 
+	- Define the **scope** (IP ranges, hosts, protocols, time period).
+	- Collect **supporting info** (file names, suspicious domains, indicators of compromise).
+
+### Diagnostic analysis
+- why did it happen
+- understand the causes, effects and interactions
+- focus on correlation and root cause
+- **Task**
+	- capture traffic
+	- filter relevant traffic
+	- interpret traffic 
+### Predictive Analysis
+- what might happen next
+- use historical + current data to predict future risks
+- **Task**
+	- take notes and mind maps of findings
+	- record
+		- time frame of capture
+		- suspicious hosts
+		- conversation 
+		- executable transfers
+	- summarize 
+
+### Prescriptive Analysis
+- what should we do
+- recommend and/or enforce action to solve or prevent problems
+- **Tasks**
+	- prescribe remediation steps 
+	- document lesson learnt
+		-  what worked
+		- what failed
+		- what can improve next time
+- feed insights into playbook and incident response processes 
+
+
+the flow will be
+1. capture more traffic
+2. expand the scop 
+3. re run step to build a bigger picture
+
+### Key components of an effective analysis
+
+- [ ] **Know your env** (normal and abnormal, all known hosts, devices, server and apps ... )
+- [ ] **Placement is key** (place the capture tool closer to the source of the issue)
+- [ ] **Persistence** (attack can be consistently (keep monitoring, revisit data, dont give up on the first capture)
+- [ ] **Analysis Approach** 
+	- [ ] **start with standard protocols** (Focus first on common traffic: HTTP/S, FTP, Email, TCP, UDP, Then check remote access protocols: SSH, RDP, Telnet.Compare with security policy)
+	- [ ] **look for patterns** (Hosts checking in to an external IP at the **same time daily** → classic **C2 beaconing**.)
+	- [ ] Check **host-to-host communications** 
+	- [ ] **Spot unique events**
+	- [ ] **Ask for help** (you always miss some typos in your own writing, but others catch them instantly.)
+- [ ] **Tool to Support Analysis** 
+
+- **Packet capture & filtering:** tcpdump, Wireshark.
+- **Detection & enrichment:** Snort, Suricata, Security Onion.
+- **Network controls:** Firewalls.
+- **Centralized analysis:** SIEM (Splunk, ELK stack).
+- **Goal:** Tools provide **speed & enrichment**, humans provide **judgment & context**.
+
+---
+---
+
+
+---
+---
+## Analysis with Wireshark
+
+`Wireshark` is a free and open-source network traffic analyzer
+- many different interface types (to include WiFi, USB, and Bluetooth)
+
+#### wireshark in linux 
+
+```shell
+which wireshark
+
+sudo apt install wireshark
+```
+
+### TShark 
+
+its a command line version of wireshark
+
+Basic **TShark Switches Cheat Sheet**
+
+
+|**Switch Command**|**Description**|**Usage Example**|
+|---|---|---|
+|`-D`|Displays all available network interfaces and exits.|`tshark -D`|
+|`-L`|Lists the link-layer mediums (e.g., Ethernet, Wi-Fi) available for a given interface.|`tshark -i eth0 -L`|
+|`-i`|Selects a specific interface to capture traffic from.|`tshark -i eth0`|
+|`-f`|Sets a **capture filter** using libpcap syntax (applied during capture).|`tshark -i eth0 -f "tcp port 80"`|
+|`-c`|Captures a specific number of packets, then quits.|`tshark -i eth0 -c 50`|
+|`-a`|Defines an **autostop condition** (duration, filesize, or packet count).|`tshark -i eth0 -a duration:60` _(stop after 60s)_|
+|`-r <file>`|Reads packets from a capture file (PCAP).|`tshark -r traffic.pcap`|
+|`-w <file>`|Writes captured packets into a file (PCAPNG format by default).|`tshark -i eth0 -w capture.pcapng`|
+|`-P`|Prints packet summary **while also writing to a file** (used with `-w`).|`tshark -i eth0 -w out.pcap -P`|
+|`-x`|Adds **hex and ASCII dump** of packet data in output.|`tshark -i eth0 -c 10 -x`|
+|`-h`|Displays the help menu with all available options.|`tshark -h`|
+
+`utilize BPF syntax.`
+
+---
+### Termshark
+
+Termshark is a Text-based User Interface (TUI) application that provides the user with a Wireshark-like interface right in your terminal window.
+[Termshark](https://github.com/gcla/termshark)
+
+![](../attachments/Pasted%20image%2020250909200305.png)
+
+### Wireshark GUI walkthrough
+
+![](../attachments/Pasted%20image%2020250909200458.png)
+
+`orange`
+- each packet that include the different fields. we can add or remove columes
+- Packet List
+
+`Blue`
+- the dissected packet into different encapsulation layers (OSI)
+- Packet Details
+
+`Green`
+- The Packet Bytes window allows us to look at the packet contents in ASCII or hex output. As we select a field from the windows above, it will be highlighted in the Packet Bytes window and show us where that bit or byte falls within the overall packet.
+- Each line in the output contains the data offset, sixteen hexadecimal bytes, and sixteen ASCII bytes. Non-printable bytes are replaced with a period in the ASCII format.
+- Packet Bytes
+
+#### Capture filters
+capture filter will drop all other traffic not explicitly meeting the criteria set.
+
+|**Capture Filter**|**Description**|**Example Usage in Wireshark**|
+|---|---|---|
+|`host x.x.x.x`|Capture only traffic to/from a specific host.|`host 192.168.1.10`|
+|`net x.x.x.x/24`|Capture traffic to/from a specific network.|`net 192.168.1.0/24`|
+|`src net x.x.x.x/24`|Capture traffic only **sourced** from a network.|`src net 10.0.0.0/16`|
+|`dst net x.x.x.x/24`|Capture traffic only **destined** to a network.|`dst net 172.16.0.0/16`|
+|`port #`|Capture traffic for a specific port.|`port 80`|
+|`not port #`|Capture all traffic **except** the specified port.|`not port 22`|
+|`port # and #`|Capture traffic only on **both specified ports**.|`port 80 and port 443`|
+|`portrange x-y`|Capture traffic within a port range.|`portrange 20-25`|
+|`ip`|Capture only IP traffic (excludes ARP, STP, etc.).|`ip`|
+|`ether`|Capture only Ethernet frames.|`ether`|
+|`tcp`|Capture only TCP traffic.|`tcp`|
+|`udp`|Capture only UDP traffic.|`udp`|
+|`broadcast`|Capture only broadcast traffic.|`broadcast`|
+|`multicast`|Capture only multicast traffic.|`multicast`|
+|`unicast`|Capture only unicast traffic.|`unicast`|
+- there are built in filter (click on the capture readial at the top of the wireshark window -> select capture filter the drop down)
+
+![](../attachments/Pasted%20image%2020250909213357%201.png)
+
+#### Display Filters
+used while the capture is running and after the capture has stopped. Display filters are proprietary to Wireshark, which offers many different options for almost any protocol.
+
+|**Display Filter**|**Result / Description**|**Example Usage in Wireshark**|
+|---|---|---|
+|`ip.addr == x.x.x.x`|Shows all traffic **to or from** a specific host (OR condition).|`ip.addr == 192.168.1.10`|
+|`ip.addr == x.x.x.x/24`|Shows all traffic to/from a specific network. (OR condition).|`ip.addr == 192.168.1.0/24`|
+|`ip.src == x.x.x.x`|Shows only traffic **originating from** a host.|`ip.src == 10.0.0.5`|
+|`ip.dst == x.x.x.x`|Shows only traffic **destined to** a host.|`ip.dst == 8.8.8.8`|
+|`dns`|Shows only DNS protocol packets.|`dns`|
+|`tcp`|Shows only TCP traffic.|`tcp`|
+|`udp`|Shows only UDP traffic.|`udp`|
+|`ftp`|Shows only FTP traffic.|`ftp`|
+|`arp`|Shows only ARP requests/replies.|`arp`|
+|`tcp.port == x`|Shows only traffic using a specific TCP port.|`tcp.port == 443`|
+|`udp.port == x`|Shows only traffic using a specific UDP port.|`udp.port == 53`|
+|`tcp.port != x`|Shows all TCP traffic **except** on a given port.|`tcp.port != 80`|
+|`udp.port != x`|Shows all UDP traffic **except** on a given port.|`udp.port != 67`|
+|`and`|Combine multiple conditions that must all match.|`ip.src == 192.168.1.10 and tcp.port == 443`|
+|`or`|Match either of two conditions.|`ip.dst == 10.0.0.5 or ip.dst == 10.0.0.6`|
+|`not`|Exclude traffic from results.|`not arp`|
+- do not discord the packets just hides the packets
+- The filter text box in Wireshark turns **green if valid**, **red if invalid**.
+- You can **bookmark filters** for quick re-use
+
+---
+---
+
+## Packet Inception, Dissecting Network Traffic With Wireshark
+
+The lab wants you to **find an image file hidden in HTTP traffic inside the .pcap, extract it with Wireshark, and check if someone secretly hid a message inside that image**.
+
