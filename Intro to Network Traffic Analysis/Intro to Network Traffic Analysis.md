@@ -1,3 +1,4 @@
+[module walkthrough](https://medium.com/@WriteupsTHM_HTB_CTF/wireshark-hackthebox-intro-to-network-traffic-analysis-2c71bad0d14)
 
 ![](../attachments/Pasted%20image%2020250909101514.png)
 
@@ -534,7 +535,66 @@ used while the capture is running and after the capture has stopped. Display fil
 ---
 ---
 
+## Wireshark Advanced usage
+
+### plugins
+
+#### The Statistics and Analyze Tabs
+The **Statistics tab** in Wireshark provides **summaries and reports** of the captured network traffic. Instead of going packet by packet, it helps you see **patterns, trends, and anomalies** at a higher level. Think of it as _zooming out_ to see the big picture of network behavior.
+
+![](../attachments/Pasted%20image%2020250910110822.png)
+
+#### Analyze Tab 
+The **Analyze tab** is all about **digging deeper** into packet behavior. While the _Statistics tab_ gives you summaries and patterns, the **Analyze tab** lets you run **protocol-specific analysis, follow conversations, and apply expert tools** for deeper troubleshooting.
+
+##### Following TCP Streams
+Wireshark can stitch TCP packets back together to recreate the entire stream in a readable format. This ability also allows us to pull data (`images, files, etc.`) out of the capture. This works for almost any protocol that utilizes TCP as a transport mechanism.
+To utilize this feature:
+- right-click on a packet from the stream we wish to recreate.
+- select follow → TCP
+- this will open a new window with the stream stitched back together. From here, we can see the entire conversation.
+- we can use the equation `tcp.stream == 0`
+	- lets say we are captured traffic while visiting multiple websites
+		- **Connection to google.com** → `tcp.stream == 0`
+		- **Connection to youtube.com** → `tcp.stream == 1`
+		- **Connection to github.com** → `tcp.stream == 2`
+	- like this we can filter for a specific TCP or any other stream
+
+#### Extract Files From The GUI
+
+![](../attachments/extract-http.gif)
+
+#### Extracting data form FTP
+[DOCS](https://www.wireshark.org/docs/dfref/f/ftp.html)
+
+- `ftp` display all ftp traffic
+- `ftp.request.command` show any commands sent across the ftp-control channel 21
+- `ftp-data` port 20
+1. Once done, Change "`Show and save data as`" to "`Raw`" and save the content as the original file name.
+2. Validate the extraction by checking the file type.
+
+---
+---
 ## Packet Inception, Dissecting Network Traffic With Wireshark
 
 The lab wants you to **find an image file hidden in HTTP traffic inside the .pcap, extract it with Wireshark, and check if someone secretly hid a message inside that image**.
 
+1. `http` filter
+2. we can see the connections that is sending the jpeg file 
+3. we will click on the image or we use `tcp.stream==1` 
+4. files --> export objects --> http --> file (we can save or preview)
+
+### Live Capture and analysis
+- security manager is conformed that user was smuggling data out of the network via the image
+- any thing else is going form `172.16.10.2`
+
+
+```bash
+xfreerdp /v:10.129.43.4 /u:htb-student /p:HTB_@cademy_stdnt!
+```
+
+all the content is in the walk through in the module 
+or check out the [module walkthrough](https://medium.com/@WriteupsTHM_HTB_CTF/wireshark-hackthebox-intro-to-network-traffic-analysis-2c71bad0d14)
+
+---
+---
