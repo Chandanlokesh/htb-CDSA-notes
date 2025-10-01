@@ -1,4 +1,4 @@
-![threathunting](attachments/Pasted%20image%2020250812100047.png)
+![threathunting](../attachments/Pasted%20image%2020250812100047.png)
 - human led hunting team looking for threats before alerts come . 
 - often hypothesis driven and focused on finding threat that evade existing security tools
 - the main goal is the reduce the dwell time in cyber kill chain
@@ -158,7 +158,7 @@ If you’re a bank, you’d focus on detecting ATM malware or SWIFT fraud, not p
 #### 8. Pyramid of pain
 - this will help out IOCs to rank
 
-![pyramid of pain](attachments/Pasted%20image%2020250812225546.png)
+![pyramid of pain](../attachments/Pasted%20image%2020250812225546.png)
 
  [Intel-Driven Detection and Response to Increase Your Adversary’s Cost of Operations.](https://rvasec.com/slides/2014/Bianco_Pyramid%20of%20Pain.pdf)
 - **hash values**
@@ -179,7 +179,7 @@ If you’re a bank, you’d focus on detecting ATM malware or SWIFT fraud, not p
 
 #### 9. Diamond model of intrusion analysis 
 
-![](attachments/Pasted%20image%2020250812231513.png)
+![](../attachments/Pasted%20image%2020250812231513.png)
 
 used to systematically understand, analyze, and respond to cyber intrusions by focusing on key elements and their relationships.
 its like helps to make decision on what we have and what we can do 
@@ -211,7 +211,7 @@ https://www.youtube.com/watch?v=w8mEG52tfsY
 
 **Four fundamental principles make CTI an integral part of our cybersecurity strategy**
 
-![principle](attachments/Pasted%20image%2020250813181920.png)
+![principle](../attachments/Pasted%20image%2020250813181920.png)
 
 - **Relevance** we must ensure the organization using the safe systems . there will be lot of info about the hacks, vulnerability but we must focus on what over organization is required
 - **Timeliness** try to patch newly disclosed vulnerability or info old data may not be not accurate for know . shift the info got form the CTI team to defense team
@@ -232,7 +232,7 @@ CTI should understanding of threats to our organization and partner entities, po
 
 nformation is compiled, it transforms into intelligence. This intelligence can then be classified into three different categories,
 
-![](attachments/Pasted%20image%2020250813191201.png)
+![](../attachments/Pasted%20image%2020250813191201.png)
 
 `Strategic Intelligence` is characterized by
 - **Audience:** Executives, senior leadership.
@@ -284,12 +284,12 @@ nformation is compiled, it transforms into intelligence. This intelligence can t
 
 #### attack sequence
 
-![](attachments/Pasted%20image%2020250813195023.png)
+![](../attachments/Pasted%20image%2020250813195023.png)
 
 **`Initial Breach`**
 email that includes a link leading to a OneNote file that onenote file is in mego.io or some thing
 
-![](attachments/Pasted%20image%2020250813195215.png)
+![](../attachments/Pasted%20image%2020250813195215.png)
 
 the onenote file will have a **hidden button** that button will trigger a **Batch file** that will be stage 0 the batch file will downloads **powershell scripts** 
 
@@ -363,8 +363,8 @@ Our task centers around a threat intelligence report concerning a malicious soft
 
 The report indicates that initial compromises all took place via "invoice.one" files.
 
-![](Pasted%20image%2020250813221503.png)
+![](../attachments/Pasted%20image%2020250813221503.png)
 
-![](Pasted%20image%2020250813222109.png)
+![](../attachments/Pasted%20image%2020250813222109.png)
 
-![](Pasted%20image%2020250813222211.png)
+![](../attachments/Pasted%20image%2020250813222211.png)

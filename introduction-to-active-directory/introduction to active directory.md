@@ -311,3 +311,326 @@ In AD, built-in is a container that holds [default groups](https://docs.microso
 - A foreign security principal (FSP) is an object created in AD to represent a security principal that belongs to a trusted external forest.
 -  They are created when an object such as a user, group, or computer from an external (outside of the current) forest is added to a group in the current domain.
 - FSPs are created in a specific container named ForeignSecurityPrincipals with a distinguished name like `cn=ForeignSecurityPrincipals,dc=inlanefreight,dc=local`.
+
+---
+---
+
+##  Active Directory Functionality
+
+|**Roles**|**Description**|
+|---|---|
+|`Schema Master`|This role manages the read/write copy of the AD schema, which defines all attributes that can apply to an object in AD.|
+|`Domain Naming Master`|Manages domain names and ensures that two domains of the same name are not created in the same forest.|
+|`Relative ID (RID) Master`|The RID Master assigns blocks of RIDs to other DCs within the domain that can be used for new objects. The RID Master helps ensure that multiple objects are not assigned the same SID. Domain object SIDs are the domain SID combined with the RID number assigned to the object to make the unique SID.|
+|`PDC Emulator`|The host with this role would be the authoritative DC in the domain and respond to authentication requests, password changes, and manage Group Policy Objects (GPOs). The PDC Emulator also maintains time within the domain.|
+|`Infrastructure Master`|This role translates GUIDs, SIDs, and DNs between domains. This role is used in organizations with multiple domains in a single forest. The Infrastructure Master helps them to communicate. If this role is not functioning properly, Access Control Lists (ACLs) will show SIDs instead of fully resolved names.|
+
+ [This](https://docs.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2008-R2-and-2008/cc754918\(v=ws.10\)?redirectedfrom=MSDN) and [this](https://docs.microsoft.com/en-us/windows-server/identity/ad-ds/active-directory-functional-levels) article describe both the domain and forest functional levels from Windows 2000 native to Windows Server 2012 R2.
+
+| Domain Functional Level | Features Available                                                                                                                                                                                                                                                                                                                                                                                                                                                                         | Supported Domain Controller Operating Systems                                                                 |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------- |
+| Windows 2000 native     | Universal groups for distribution and security groups, group nesting, group conversion (between security and distribution and security groups), SID history.                                                                                                                                                                                                                                                                                                                               | Windows Server 2008 R2, Windows Server 2008, Windows Server 2003, Windows 2000                                |
+| Windows Server 2003     | Netdom.exe domain management tool, lastLogonTimestamp attribute introduced, well-known users and computers containers, constrained delegation, selective authentication.                                                                                                                                                                                                                                                                                                                   | Windows Server 2012 R2, Windows Server 2012, Windows Server 2008 R2, Windows Server 2008, Windows Server 2003 |
+| Windows Server 2008     | Distributed File System (DFS) replication support, Advanced Encryption Standard (AES 128 and AES 256) support for the Kerberos protocol, Fine-grained password policies                                                                                                                                                                                                                                                                                                                    | Windows Server 2012 R2, Windows Server 2012, Windows Server 2008 R2, Windows Server 2008                      |
+| Windows Server 2008 R2  | Authentication mechanism assurance, Managed Service Accounts                                                                                                                                                                                                                                                                                                                                                                                                                               | Windows Server 2012 R2, Windows Server 2012, Windows Server 2008 R2                                           |
+| Windows Server 2012     | KDC support for claims, compound authentication, and Kerberos armoring                                                                                                                                                                                                                                                                                                                                                                                                                     | Windows Server 2012 R2, Windows Server 2012                                                                   |
+| Windows Server 2012 R2  | Extra protections for members of the Protected Users group, Authentication Policies, Authentication Policy Silos                                                                                                                                                                                                                                                                                                                                                                           | Windows Server 2012 R2                                                                                        |
+| Windows Server 2016     | [Smart card required for interactive logon](https://docs.microsoft.com/en-us/windows/security/threat-protection/security-policy-settings/interactive-logon-require-smart-card) new [Kerberos](https://docs.microsoft.com/en-us/windows-server/security/kerberos/whats-new-in-kerberos-authentication) features and new [credential protection](https://docs.microsoft.com/en-us/windows-server/security/credentials-protection-and-management/whats-new-in-credential-protection) features |                                                                                                               |
+he target domain has to use [DFS-R](https://docs.microsoft.com/en-us/windows-server/storage/dfs-replication/dfsr-overview) for SYSVOL replication.
+
+Forest functional levels have introduced a few key capabilities over the years:
+
+|**Version**|**Capabilities**|
+|---|---|
+|`Windows Server 2003`|saw the introduction of the forest trust, domain renaming, read-only domain controllers (RODC), and more.|
+|`Windows Server 2008`|All new domains added to the forest default to the Server 2008 domain functional level. No additional new features.|
+|`Windows Server 2008 R2`|Active Directory Recycle Bin provides the ability to restore deleted objects when AD DS is running.|
+|`Windows Server 2012`|All new domains added to the forest default to the Server 2012 domain functional level. No additional new features.|
+|`Windows Server 2012 R2`|All new domains added to the forest default to the Server 2012 R2 domain functional level. No additional new features.|
+|`Windows Server 2016`|[Privileged access management (PAM) using Microsoft Identity Manager (MIM).](https://docs.microsoft.com/en-us/windows-server/identity/whats-new-active-directory-domain-services#privileged-access-management)|
+### Trusts
+A trust is used to establish `forest-forest` or `domain-domain` authentication, allowing users to access resources in (or administer) another domain outside of the domain their account resides in. A trust creates a link between the authentication systems of two domains.
+
+|**Trust Type**|**Description**|
+|---|---|
+|`Parent-child`|Domains within the same forest. The child domain has a two-way transitive trust with the parent domain.|
+|`Cross-link`|a trust between child domains to speed up authentication.|
+|`External`|A non-transitive trust between two separate domains in separate forests which are not already joined by a forest trust. This type of trust utilizes SID filtering.|
+|`Tree-root`|a two-way transitive trust between a forest root domain and a new tree root domain. They are created by design when you set up a new tree root domain within a forest.|
+|`Forest`|a transitive trust between two forest root domains.|
+
+![](../attachments/Pasted%20image%2020251001104742.png)
+
+Trusts can be transitive or non-transitive.
+
+- A transitive trust means that trust is extended to objects that the child domain trusts.
+    
+- In a non-transitive trust, only the child domain itself is trusted.
+
+Trusts can be set up to be one-way or two-way (bidirectional).
+
+- In bidirectional trusts, users from both trusting domains can access resources.
+- In a one-way trust, only users in a trusted domain can access resources in a trusting domain, not vice-versa. The direction of trust is opposite to the direction of access.
+
+---
+---
+
+## Kerberos, DNS, LDAP, MSRPC
+
+While Windows operating systems use a variety of protocols to communicate, Active Directory specifically requires [Lightweight Directory Access Protocol (LDAP)](https://en.wikipedia.org/wiki/Lightweight_Directory_Access_Protocol), Microsoft's version of [Kerberos](https://en.wikipedia.org/wiki/Kerberos_\(protocol\)), [DNS](https://en.wikipedia.org/wiki/Domain_Name_System) for authentication and communication, and [MSRPC](https://ldapwiki.com/wiki/MSRPC) which is the Microsoft implementation of [Remote Procedure Call (RPC)](https://en.wikipedia.org/wiki/Remote_procedure_call), an interprocess communication technique used for client-server model-based applications.
+
+### Kerberos
+
+- **Kerberos** is the **default authentication protocol** in Windows domains (since Windows 2000).
+- It’s **ticket-based** → Instead of sending your password over the network, Kerberos uses special tokens called _tickets_ to prove your identity.
+- It uses **mutual authentication** → The **user proves to the server**, and the **server proves to the user**.
+- It is **stateless** → The Domain Controller (KDC) does not keep track of old sessions; it just validates tickets.
+
+#### key components
+
+
+| components                                                                                        | description                                                                                           |
+| :------------------------------------------------------------------------------------------------ | :---------------------------------------------------------------------------------------------------- |
+| KDC (key distribution center)<br>- AS (authentication service)<br>- TGS (ticket granting service) | Lives on the Domain Controller<br>issues TGT (ticket granting ticket)<br>issues service tickets (TGS) |
+| TGT (ticket granting ticket)                                                                      | proof that you are who you say you are . you use it to get service tickets                            |
+| TGS (ticket granting service ticket)                                                              | Proof that you can access a specific service (e.g., file share, SQL server).                          |
+| krbtgt acount                                                                                     | a special hidden AD account that sign/encrypts tickets                                                |
+
+![](../attachments/Pasted%20image%2020251001130205.png)
+
+- **AS-REQ** (Authentication Request)  
+    User encrypts timestamp with their password hash and sends to KDC.
+    
+- **AS-REP** (Response)  
+    KDC verifies and gives back a **TGT** (signed with `krbtgt` account).
+    
+- **TGS-REQ**  
+    User presents TGT to KDC asking for a service ticket (e.g., for `CIFS/file01`).
+    
+- **TGS-REP**  
+    KDC issues a **TGS**, encrypted with the target service’s password hash.
+    
+- **AP-REQ**  
+    User presents the TGS to the service. If it matches, service grants access.
+
+uses TCP/UDP 88 port
+
+### DNS
+
+- DNS is like the **phonebook of the internet and networks**.
+- it translates hostnames to ip addresses so computers can talk to each other
+- **AD DS (Active Directory Domain Services)** is built on top of DNS.
+- Clients (workstations, laptops, servers) rely on DNS to **find Domain Controllers**.
+- Domain Controllers themselves use DNS to **find and talk to each other**.
+
+#### key AD DNS components
+
+
+| components                    | description                                                                                                                                           |
+| :---------------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| SRV records (service records) | special DNS entries that tell client where service are located<br>Example: `_ldap._tcp.dc._msdcs.ad.local` → lists all the DCs offering LDAP service. |
+| Dynamic DNS (DDNS)            | computers automatically update their DNS records when their IP changes<br>saves admin form manually records<br>prevents mismatches                    |
+| Namespace                     | AD uses its own DNS namespace (e.g., `company.local` or `corp.example.com`) for internal communication.                                               |
+
+
+- **UDP 53** → Default, faster, used for most DNS queries.
+- **TCP 53** → Used if:
+    - Query/response is too large (>512 bytes), or
+    - Zone transfers between DNS servers are happening.
+
+```shell
+#foward DNS lookup
+nslookup INLANEFREIGHT.LOCAL
+
+#reverse DNS lookup
+nslookup 172.16.6.5
+
+#finding the iP address of a host
+nslookup ACADEMY-EA-DC01
+```
+
+For deeper dives into DNS, check out the [DNS Enumeration Using Python](https://academy.hackthebox.com/course/preview/dns-enumeration-using-python) module and the DNS section of the [Information Gathering - Web Edition](https://academy.hackthebox.com/course/preview/information-gathering---web-edition) module.
+
+### LDAP
+- **LDAP (Lightweight Directory Access Protocol)** = A **protocol** used to query and interact with directory services.  [Lightweight Directory Access Protocol (LDAP)](https://en.wikipedia.org/wiki/Lightweight_Directory_Access_Protocol)
+- Think of it as the **language** that applications and systems use to talk to a directory (like AD).
+- In AD’s case → **Active Directory = the service**, **LDAP = the protocol**.
+- like apache <--> HTTP and AD <---> LDAP
+- AD stores lots of data: **users, groups, computers, OUs, policies, permissions**.
+- LDAP provides a way for apps, services, or devices to **search, query, and authenticate against this data**.
+- Example: When you log in to a corporate app, it may ask AD (via LDAP): _“Does this username/password exist?”
+- **LDAP (unencrypted)** → Port **389 (TCP/UDP)**
+- **LDAP over SSL (LDAPS)** → Port **636 (TCP)**
+
+#### LDAP authentication (BIND)
+
+When you "bind," you’re telling the LDAP server: _“Here are my credentials—please authenticate me.”_
+There are two main types:
+1. **Simple Authentication**
+    - Username + Password → sent in a BIND request.
+    - Variants: anonymous, unauthenticated, or plain user/password.
+    - **Problem**: Without encryption, password is in cleartext.
+2. **SASL Authentication (Simple Authentication and Security Layer)** [The Simple Authentication and Security Layer (SASL)](https://en.wikipedia.org/wiki/Simple_Authentication_and_Security_Layer)
+    - Uses external auth mechanisms (like **Kerberos**).
+    - LDAP just forwards the request.
+    - Stronger security since credentials don’t travel in plain text.
+
+![](../attachments/Pasted%20image%2020251001133157.png)
+
+While uncommon, you may come across organization while performing an assessment that do not have AD but are using LDAP, meaning that they most likely use another type of LDAP server such as [OpenLDAP](https://en.wikipedia.org/wiki/OpenLDAP).
+The latest LDAP specification is [Version 3](https://tools.ietf.org/html/rfc4511), published as RFC 4511.
+
+### MSRPC
+
+- **MSRPC** = Microsoft’s implementation of RPC (Remote Procedure Call), a mechanism to let programs on one machine invoke functions on another machine as if local.\
+- RPC services expose _interfaces_ (APIs) that clients call over the network — many AD operations use RPC under the hood.
+
+#### Important transport details
+- **RPC endpoint mapper:** TCP **135** — clients contact this to find which dynamic port an RPC service is listening on.
+- **Dynamic RPC ports:** Modern Windows uses a dynamic high port range (default **49152–65535** on modern Windows) for RPC endpoints; older systems used **1024–5000**.
+- RPC can also be accessed over **named pipes** (e.g., `\\<host>\pipe\samr`) and via DCOM.
+- When hunting or hardening, remember both TCP 135 and the dynamic high port range matter.
+
+The four key AD RPC interfaces (what they do, why they matter)
+
+#### 1. `lsarpc` (LSA RPC)
+
+- Talks to the **Local Security Authority** (LSA). LSA manages local security policy, account rights, auditing, and interactive authentication.
+    
+- Uses: reading/changing security policy, audit settings, and other LSA-managed objects.
+    
+- Risk: LSA is privileged — abuse can expose sensitive security configuration/credentials.
+
+#### 2. `netlogon`
+
+- The **Netlogon** service authenticates users/computers with domain controllers and supports secure channel management between machines and DCs.
+    
+- Uses: authenticating machine accounts, establishing secure channels, replicating secrets between DCs and members.
+    
+- Risk: Attacks that tamper with Netlogon or its secrets can allow credential or secure-channel abuse.
+#### 3. `samr` (Remote SAM)
+
+- `samr` manages the **Security Account Manager (SAM)** and domain account database: users, groups, SIDs, RIDs, etc.
+    
+- Uses: administrative account creation/modification and also read-only enumeration of users/groups.
+    
+- Why attackers like it: wide reconnaissance — an authenticated user can query lots of AD objects (users, groups, privileges) and map out targets. Tools like **BloodHound** and `rpcclient`/impacket use `samr` for enumeration.
+    
+- Mitigation note: By default many samr queries are allowed to _authenticated users_; you can harden environments to restrict who can perform remote SAM queries (best practice: limit to admins).
+#### 4. `drsuapi` (Directory Replication / DRS Remote API)
+
+- Implements AD **Directory Replication** operations used by DCs to replicate changes (the DRS Remote Protocol).
+    
+- Uses: replication between DCs, transfer of directory data (including attributes like password hashes in the database).
+    
+- Why attackers like it: it enables replication-style access to directory data. Tools/techniques (e.g., **DCSync**, some `impacket` tools, or abusing replication privileges) let an attacker request account credential material from a DC without needing to compromise the DC fully. This can yield NTLM hashes / Kerberos keys for many accounts — effectively domain-wide secrets.
+
+---
+---
+
+## NTLM Authentication
+
+- Aside from Kerberos and LDAP, AD also supports **LM, NTLM, NTLMv1, and NTLMv2**.
+- **LM and NTLM** → refer to **hash types**.
+- **NTLMv1 and NTLMv2** → are **authentication protocols** that use those hashes.
+- While still in use, these are weaker than **Kerberos**, which is usually preferred.
+
+| Hash/Protocol | Cryptographic Technique             | Mutual Authentication | Message Type                | Trusted Third Party     |
+| ------------- | ----------------------------------- | --------------------- | --------------------------- | ----------------------- |
+| **NTLM**      | Symmetric key cryptography          | No                    | Random number               | Domain Controller       |
+| **NTLMv1**    | Symmetric key cryptography          | No                    | MD4 hash, random number     | Domain Controller       |
+| **NTLMv2**    | Symmetric key cryptography          | No                    | MD4 hash, random number     | Domain Controller       |
+| **Kerberos**  | Symmetric + asymmetric cryptography | Yes                   | Encrypted ticket (DES, MD5) | Domain Controller / KDC |
+
+- **Symmetric** → **same key** for encryption and decryption.
+    
+- **Asymmetric** → **different keys** (public + private) for encryption and decryption.
+
+#### LM (LAN Manager)
+- Oldest Windows password hash (since 1987).
+    
+- Stored in **SAM** or **NTDS.dit** if used. Disabled by default since Vista/Server 2008 but still found on old systems.
+    
+- Passwords max **14 characters**, converted to **uppercase**, split into **two 7-char** chunks, each turned into a DES key and encrypted with the fixed string `KGS!@#$%`, then concatenated → **LM hash**.
+    
+- Weak because attackers only need to brute-force 7 chars twice; second half is constant for ≤7 char passwords.
+    
+- Example LM-like value: `299bd128c1101fd6`.
+    
+- Older Windows stored both LM and NT hashes by default.
+
+#### NTHash (NTLM hash)
+
+- Modern Windows use the **NT hash** (MD4 of the UTF-16-LE password): `MD4(UTF-16-LE(password))`.
+    
+- Stored in SAM or NTDS.dit. Stronger charset support (Unicode) but still crackable offline with GPUs for short passwords.
+    
+- NT hash example: `b4b9b02e6f09a9bd760f388b67351e2b`.
+    
+- Full NTLM account entry example (fields):  
+    `Rachel:500:<LM_hash>:<NT_hash>:::`
+    
+    - `Rachel` = username
+        
+    - `500` = RID (admin)
+        
+    - `<LM_hash>` = LM (might be disabled)
+        
+    - `<NT_hash>` = NT hash (can be cracked or used in pass-the-hash)
+
+![](../attachments/Pasted%20image%2020251001151456.png)
+
+```shell-session
+crackmapexec smb 10.129.41.19 -u rachel -H e46b9e548fa0d122de7f59fb6d48eaa2
+```
+
+**Note:** Neither LANMAN nor NTLM uses a salt.
+#### NTLM (protocol overview)
+
+- Challenge/response protocol using the NT hash.
+    
+- Three messages: `NEGOTIATE_MESSAGE` → `CHALLENGE_MESSAGE` → `AUTHENTICATE_MESSAGE`.
+    
+- Supports NT hash (and LM if present) for authentication.
+    
+- Vulnerable to **pass-the-hash**: attacker can use the NT hash directly to authenticate without knowing the plaintext password.
+
+#### NTLMv1 (Net-NTLMv1)
+
+- Uses NT and LM hashes in a challenge/response.
+    
+- Server sends 8-byte challenge; client returns 24-byte response built from DES of keys derived from hashes.
+    
+- Not usable for pass-the-hash attacks.
+    
+- Example v1 structure: `response = DES(K1,C) | DES(K2,C) | DES(K3,C)`
+    
+- Example NTLMv1 string shown in your content.
+    
+
+---
+
+#### NTLMv2 (Net-NTLMv2)
+
+- Introduced as stronger replacement; default since Server 2000.
+    
+- Sends two responses to the server challenge: includes HMAC-MD5 over NT-Hash, server challenge, client challenge, time, domain name.
+    
+- Response structure (simplified from your content): `response = LMv2 | CC | NTv2 | CC*` where `LMv2` and `NTv2` are HMAC-MD5 outputs.
+    
+- Example NTLMv2 string shown in your content.
+    
+
+---
+
+#### Domain Cached Credentials (MSCache2 / DCC)
+
+- Allows login when DC is unreachable.
+    
+- Host caches up to **last 10 hashes** in `HKLM\SECURITY\Cache`.
+    
+- These cached hashes **cannot** be used for pass-the-hash and are **slow to crack**.
+    
+- Format example from your content: `$DCC2$10240#bjones#e4e938d12fe5974dc42a90120bd9c90f`.
+    
+- Obtaining them requires local admin on the host.
