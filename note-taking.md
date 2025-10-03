@@ -1,6 +1,5 @@
 
-xfreerdp /u:htb-student /p:Academy_WinFun! /v:10.129.205.123 /dynamic-resolution
-
+xfreerdp /u:eagle\\bob /p:Slavi123 /v:10.129.161.164 /dynamic-resolution
 
 
 ```shell
